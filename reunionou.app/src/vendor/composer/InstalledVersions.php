@@ -33,6 +33,15 @@ private static $installed = array (
       ),
       'reference' => NULL,
     ),
+    'davidepastore/slim-validation' => 
+    array (
+      'pretty_version' => 'v0.5.1',
+      'version' => '0.5.1.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => 'c28d6e2545dab51c9c4330d4db1dc55a75632f56',
+    ),
     'doctrine/inflector' => 
     array (
       'pretty_version' => '2.0.4',
@@ -132,6 +141,15 @@ private static $installed = array (
       ),
       'reference' => '181d480e08d9476e61381e04a71b34dc0432e812',
     ),
+    'paragonie/random_compat' => 
+    array (
+      'pretty_version' => 'v9.99.100',
+      'version' => '9.99.100.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '996434e5492cb4c3edcb9168db6fbb1359ef965a',
+    ),
     'pimple/pimple' => 
     array (
       'pretty_version' => 'v3.5.0',
@@ -186,8 +204,8 @@ private static $installed = array (
     array (
       'provided' => 
       array (
-        0 => '1.0|2.0',
-        1 => '1.0.0 || 2.0.0 || 3.0.0',
+        0 => '1.0.0 || 2.0.0 || 3.0.0',
+        1 => '1.0|2.0',
       ),
     ),
     'psr/simple-cache' => 
@@ -198,6 +216,31 @@ private static $installed = array (
       array (
       ),
       'reference' => '408d5eafb83c57f6365a3ca330ff23aa4a5fa39b',
+    ),
+    'ramsey/uuid' => 
+    array (
+      'pretty_version' => '3.9.6',
+      'version' => '3.9.6.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => 'ffa80ab953edd85d5b6c004f96181a538aad35a3',
+    ),
+    'respect/validation' => 
+    array (
+      'pretty_version' => '1.1.31',
+      'version' => '1.1.31.0',
+      'aliases' => 
+      array (
+      ),
+      'reference' => '45d109fc830644fecc1145200d6351ce4f2769d0',
+    ),
+    'rhumsaa/uuid' => 
+    array (
+      'replaced' => 
+      array (
+        0 => '3.9.6',
+      ),
     ),
     'slim/slim' => 
     array (
