@@ -1,6 +1,6 @@
 version: '3'
 networks:
-  lbs.net:
+  reunionou.net:
     driver: bridge
 services:
 #####################################################
@@ -17,11 +17,11 @@ services:
       - '19180:80'
       - '19100:800'
     volumes:
-      - './lbs_reunionou.app/public:/var/www/public'
-      - './lbs_reunionou.app/src:/var/www/src'
+      - './reunionou.app/public:/var/www/public'
+      - './reunionou.app/src:/var/www/src'
     working_dir: /var/www/src
     networks:
-      - lbs.net
+      - reunionou.net
     depends_on:
       - mysql.reunionou
 
@@ -37,11 +37,11 @@ services:
       - '19280:80'
       - '19200:820'
     volumes:
-      - './lbs_reunionou.mobile_service/public:/var/www/public'
-      - './lbs_reunionou.mobile_service/src:/var/www/src'
+      - './reunionou.mobile_service/public:/var/www/public'
+      - './reunionou.mobile_service/src:/var/www/src'
     working_dir: /var/www/src
     networks:
-      - lbs.net
+      - reunionou.net
     depends_on:
       - mysql.reunionou
 
@@ -57,11 +57,11 @@ services:
       - '19380:80'
       - '19300:830'
     volumes:
-      - './lbs_reunionou.back_service/public:/var/www/public'
-      - './lbs_reunionou.back_service/src:/var/www/src'
+      - './reunionou.back_service/public:/var/www/public'
+      - './reunionou.back_service/src:/var/www/src'
     working_dir: /var/www/src
     networks:
-      - lbs.net
+      - reunionou.net
     depends_on:
       - mysql.reunionou
 
@@ -79,9 +79,9 @@ services:
     ports:
       - '3407:3406'
     networks:
-      - lbs.net
+      - reunionou.net
     volumes:
-      - './lbs_reunionou_service/sql:/var/sql'
+      - './reunionou_service/sql:/var/sql'
 
 
 
@@ -92,4 +92,4 @@ services:
     ports:
       - '8080:8080'
     networks:
-      - lbs.net
+      - reunionou.net
