@@ -17,6 +17,8 @@ use reu\app\app\models\Rdv;
 use reu\app\app\models\Participer;
 use reu\app\app\models\Commenter;
 
+use  Illuminate\Support\Str;
+use Respect\Validation\Validator as v;
 
 use reu\app\app\utils\Writer;
 use \Psr\Http\Message\ServerRequestInterface as Request;
@@ -42,6 +44,98 @@ class Controller
         $resp->getBody()->write(json_encode($commandes));
         return $resp;
     }
+    public function listEvents(Request $req, Response $resp, array $args): Response
+    {
+        $commandes = Rdv::all();
+        $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+        $resp->getBody()->write(json_encode($commandes));
+        return $resp;
+    }
+
+    // function addCommande (Request $rq, Response $rs, array $command_data):Response{
+    //     $command_data=$rq->getParsedBody();
+        
+    //     if (!isset($command_data['nom'])){
+    //         return Writer::json_error($rs, 400, "missing data : nom");
+    //     }
+    //     if (!isset($command_data['prenom'])){
+    //         return Writer::json_error($rs, 400, "missing data : prenom");
+    //     }
+    //     if (!isset($command_data['mail'])|| !filter_var($command_data['mail'],FILTER_SANITIZE_EMAIL)){
+    //         return Writer::json_error($rs, 400, "missing data : mail");
+    //     }
+    //     if (!isset($command_data['sexe'])){
+    //         return Writer::json_error($rs, 400, "missing data : sexe");
+    //     }
+            
+    //     if (!isset($command_data['livraison']['heure'])){
+    //         return Writer::json_error($rs, 400, "missing data : livraison heure");
+    //     }
+    //     //VALIDATOR
+    //     if(v::alnum()->validate($command_data['nom_client'])!=true){
+    //         $rs = $rs->withStatus(400)->withHeader( 'Content-Type', 'application/json;charset=utf-8');
+    //         $rs->getBody()->write("error incorrect value for:nom_client");
+    //         return $rs;    
+    //     }
+    //     if(v::date('Y-m-d')->validate($command_data['livraison']['date'])!=true||$command_data['livraison']['date']<date("Y-m-d")){
+    //         $rs = $rs->withStatus(400)->withHeader( 'Content-Type', 'application/json;charset=utf-8');
+    //         $rs->getBody()->write("error incorrect value for:date");
+    //         return $rs;   
+    //     }
+    //     if(v::email()->validate($command_data['mail_client'])!=true){
+    //         $rs = $rs->withStatus(400)->withHeader( 'Content-Type', 'application/json;charset=utf-8');
+    //         $rs->getBody()->write("error incorrect value for:mail_client");
+    //         return $rs;    
+    //     }
+     
+    //     if(!isset($command_data['items'])){
+    //         $rs = $rs->withStatus(400)->withHeader( 'Content-Type', 'application/json;charset=utf-8');
+    //         $rs->getBody()->write("error array items doesn't exist");
+    //         return $rs;    
+    //     };
+        
+    
+
+    //     try{
+    //         $rs = $rs->withStatus(201)->withHeader( 'Content-Type', 'application/json;charset=utf-8');
+    //         $date=new DateTime($command_data['livraison']['date'].' '.$command_data['livraison']['heure']);
+            
+    //         $c= new User();
+    //         $id=Str::uuid()->toString();
+    //         $c->id = $id;
+    //         $c->nom = filter_var($command_data['nom_client'],FILTER_SANITIZE_STRING);
+    //         $c->mail = filter_var($command_data['mail_client'],FILTER_SANITIZE_EMAIL);
+    //         $c->livraison = date_format($date,'Y-m-d H:i');
+    //         $c->status = 5;
+    //         $c->token=bin2hex(random_bytes(32));
+    //         $c->montant=0;
+    //         foreach($command_data['items'] as $item){
+    //             Rdv::create([
+    //                 'uri' => $item['uri'],
+    //                 'quantite'=>$item['q'],
+    //                 'libelle'=>$item['libelle'],
+    //                 'command_id'=>$c->id,
+    //                 'tarif'=>$item['tarif'],
+    //             ]);
+
+
+               
+    //             $c->montant+=$item['q']*$item['tarif'];
+            
+    //         }
+            
+    //         $c->save();
+
+
+    //         $rs->getBody()->write(json_encode($c));//erreur DEMANDER AU PROF
+    //         return $rs;
+    //     }catch(\Exception $e){
+    //         $rs = $rs->withStatus(500)->withHeader( 'Content-Type', 'application/json;charset=utf-8');
+    //         $rs->getBody()->write($e->getMessage());
+    //         return $rs;
+    //     }
+    // }
+
 
     public function authenticate(Request $rq, Response $rs, $args): Response {
 

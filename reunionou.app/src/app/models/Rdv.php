@@ -7,6 +7,6 @@ class Rdv extends \Illuminate\Database\Eloquent\Model
     protected $table = 'rdv';
     protected $primaryKey = 'id';
     public $timestamps = false;
-    public $incrementing = true;
-    protected $keytype = "int";
+    public $incrementing = false;
+    protected $keytype = "string";
 }

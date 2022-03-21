@@ -79,6 +79,19 @@ $app->get(
         return $ctrl->listUsers($req, $resp, $args);
     }
 );
-
+$app->get(
+    '/events[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->listEvents($req, $resp, $args);
+    }
+);
+$app->post(
+    '/register[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->listUsers($req, $resp, $args);
+    }
+);
 
 $app->run();
