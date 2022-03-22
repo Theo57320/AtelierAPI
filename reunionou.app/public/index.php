@@ -90,7 +90,7 @@ $app->post(
     '/register[/]',
     function (Request $req, Response $resp, $args): Response {
         $ctrl = new Controller($this);
-        return $ctrl->listUsers($req, $resp, $args);
+        return $ctrl->register($req, $resp, $args);
     }
 );
 
