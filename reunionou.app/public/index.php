@@ -94,4 +94,12 @@ $app->post(
     }
 );
 
+$app->post(
+    '/login[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->login($req, $resp, $args);
+    }
+);
+
 $app->run();

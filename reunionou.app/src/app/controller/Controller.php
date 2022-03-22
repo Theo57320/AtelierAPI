@@ -53,47 +53,47 @@ class Controller
         return $resp;
     }
 
-    function register(Request $rq, Response $rs, array $command_data): Response
+    function register(Request $rq, Response $rs, array $user_data): Response
     {
-        $command_data = $rq->getParsedBody();
+        $user_data = $rq->getParsedBody();
 
-        if (!isset($command_data['nom'])) {
+        if (!isset($user_data['nom'])) {
             return Writer::json_error($rs, 400, "missing data : nom");
         }
-        if (!isset($command_data['prenom'])) {
+        if (!isset($user_data['prenom'])) {
             return Writer::json_error($rs, 400, "missing data : prenom");
         }
-        if (!isset($command_data['mail']) || !filter_var($command_data['mail'], FILTER_SANITIZE_EMAIL)) {
+        if (!isset($user_data['mail']) || !filter_var($user_data['mail'], FILTER_SANITIZE_EMAIL)) {
             return Writer::json_error($rs, 400, "missing data : mail");
         }
-        if (!isset($command_data['sexe'])) {
+        if (!isset($user_data['sexe'])) {
             return Writer::json_error($rs, 400, "missing data : sexe");
         }
-        if (!isset($command_data['password'])) {
+        if (!isset($user_data['password'])) {
             return Writer::json_error($rs, 400, "missing data : password");
         }
         //VALIDATOR
-        if (v::stringType()->validate($command_data['nom']) != true) {
+        if (v::stringType()->validate($user_data['nom']) != true) {
             return Writer::json_error($rs, 400, "incorrect value for: nom");
         }
-        if (v::stringType()->validate($command_data['prenom']) != true) {
+        if (v::stringType()->validate($user_data['prenom']) != true) {
             return Writer::json_error($rs, 400, "incorrect value for: prenom");
         }
-        if (v::stringType()->validate($command_data['password']) != true) {
+        if (v::stringType()->validate($user_data['password']) != true) {
             return Writer::json_error($rs, 400, "incorrect value for: password");
         }
-        if ($command_data['sexe'] !== "M") {
-            if ($command_data['sexe'] !== "F") {
+        if ($user_data['sexe'] !== "M") {
+            if ($user_data['sexe'] !== "F") {
                 return Writer::json_error($rs, 400, "incorrect value for: sexe ( must be F or M )");
             }
         }
-        if (v::email()->validate($command_data['mail']) != true) {
-            return Writer::json_error($rs, 400, "incorrect value for: mail");
+        if (v::email()->validate($user_data['mail']) != true) {
+            return Writer::json_error($rs, 400, "incorrect format for: mail");
         }
 
 
-        $user = User::Get()->where('mail', 'like', filter_var($command_data['mail'], FILTER_SANITIZE_EMAIL));
-        if ($user != null) {
+        $user = User::Get()->where('mail', 'like', filter_var($user_data['mail'], FILTER_SANITIZE_EMAIL));
+        if ($user !== null) {
             return Writer::json_error($rs, 400, "mail already exists");
         }
 
@@ -102,15 +102,14 @@ class Controller
         try {
             $rs = $rs->withStatus(201)->withHeader('Content-Type', 'application/json;charset=utf-8');
             $cost = 10;
-
             $c = new User();
             $id = Str::uuid()->toString();
             $c->id = $id;
-            $c->nom = filter_var($command_data['nom'], FILTER_SANITIZE_STRING);
-            $c->prenom = filter_var($command_data['prenom'], FILTER_SANITIZE_STRING);
-            $c->mail = filter_var($command_data['mail'], FILTER_SANITIZE_EMAIL);
-            $c->sexe = filter_var($command_data['sexe'], FILTER_SANITIZE_STRING);
-            $c->password = password_hash(filter_var($command_data['password'], FILTER_SANITIZE_STRING), PASSWORD_BCRYPT, ["cost" => $cost]);;
+            $c->nom = filter_var($user_data['nom'], FILTER_SANITIZE_STRING);
+            $c->prenom = filter_var($user_data['prenom'], FILTER_SANITIZE_STRING);
+            $c->mail = filter_var($user_data['mail'], FILTER_SANITIZE_EMAIL);
+            $c->sexe = filter_var($user_data['sexe'], FILTER_SANITIZE_STRING);
+            $c->password = password_hash(filter_var($user_data['password'], FILTER_SANITIZE_STRING), PASSWORD_BCRYPT, ["cost" => $cost]);;
             $c->token = bin2hex(random_bytes(32));
 
             $c->save();
@@ -125,98 +124,136 @@ class Controller
         }
     }
 
-
-    public function authenticate(Request $rq, Response $rs, $args): Response
+    function login(Request $rq, Response $rs, array $user_data): Response
     {
+        $user_data = $rq->getParsedBody();
 
-        if (!$rq->hasHeader('Authorization')) {
-
-            $rs = $rs->withHeader('WWW-authenticate', 'Basic realm="commande_api api" ');
-            return Writer::json_error($rs, 401, 'No Authorization header present');
-        };
-
-        $authstring = base64_decode(explode(" ", $rq->getHeader('Authorization')[0])[1]);
-        list($email, $pass) = explode(':', $authstring);
-
-        try {
-
-            $user = User::select('id', 'email', 'username', 'passwd', 'refresh_token', 'level')
-                ->where('email', '=', $email)
-                ->firstOrFail();
-
-            if (!password_verify($pass, $user->passwd)) {
-
-                throw new \Exception("password check failed");
-            }
-            unset($user->passwd);
-        } catch (ModelNotFoundException $e) {
-
-            $rs = $rs->withHeader('WWW-authenticate', 'Basic realm="lbs auth" ');
-            return Writer::json_error($rs, 401, 'Erreur authentification');
-        } catch (\Exception $e) {
-
-            $rs = $rs->withHeader('WWW-authenticate', 'Basic realm="lbs auth" ');
-            return Writer::json_error($rs, 401, "Erreur authentification. " . $e->getMessage());
+        if (!isset($user_data['mail']) || !filter_var($user_data['mail'], FILTER_SANITIZE_EMAIL)) {
+            return Writer::json_error($rs, 400, "missing data : mail");
+        }
+        if (!isset($user_data['password'])) {
+            return Writer::json_error($rs, 400, "missing data : password");
+        }
+        //VALIDATOR
+        if (v::stringType()->validate($user_data['password']) != true) {
+            return Writer::json_error($rs, 400, "incorrect value for: password");
+        }
+        if (v::email()->validate($user_data['mail']) != true) {
+            return Writer::json_error($rs, 400, "incorrect format for: mail");
         }
 
 
-        $secret = $this->container->settings['secret'];
-        $token = JWT::encode(
-            [
-                'iss' => 'http://api.auth.local/auth',
-                'aud' => 'http://api.backoffice.local',
-                'iat' => time(),
-                'exp' => time() + (12 * 30 * 24 * 3600),
-                'upr' => [
-                    'email' => $user->email,
-                    'username' => $user->username,
-                    'level' => $user->level
-                ]
-            ],
-            $secret,
-            'HS512'
-        );
+        $user = User::Where('mail', 'like', filter_var($user_data['mail'], FILTER_SANITIZE_EMAIL))->get(["password", "token"]);
+        if (empty($user[0])) {
+            return Writer::json_error($rs, 400, "mail does not exist");
+        }
+        if ($user !== null) {
+            $rs = $rs->withStatus(200)->withHeader('Content-Type', 'application/json;charset=utf-8');
 
-        $user->refresh_token = bin2hex(random_bytes(32));
-        $user->save();
-        $data = [
-            'access-token' => $token,
-            'refresh-token' => $user->refresh_token
-        ];
-
-        return Writer::json_output($rs, 200, $data);
+            if (password_verify($user_data['password'], $user[0]['password'])) {
+                $rs->getBody()->write(json_encode(
+                    [
+                        "token" => $user[0]['token'],
+                    ]
+                ));
+                return $rs;
+            } else {
+                return Writer::json_error($rs, 400, "incorrect password");
+            }
+        }
     }
 
-    public function checkValiditeToken(Request $rq, Response $rs, $args)
-    {
 
-        if (!$rq->hasHeader('Authorization')) {
+    // public function authenticate(Request $rq, Response $rs, $args): Response
+    // {
 
-            $rs = $rs->withHeader('WWW-authenticate', 'Basic realm="commande_api api" ');
-            return Writer::json_error($rs, 401, 'No Authorization header present');
-        };
+    //     if (!$rq->hasHeader('Authorization')) {
+
+    //         $rs = $rs->withHeader('WWW-authenticate', 'Basic realm="app_api api" ');
+    //         return Writer::json_error($rs, 401, 'No Authorization header present');
+    //     };
+
+    //     $authstring = base64_decode(explode(" ", $rq->getHeader('Authorization')[0])[1]);
+    //     list($email, $pass) = explode(':', $authstring);
+
+    //     try {
+
+    //         $user = User::select('id', 'email', 'username', 'passwd', 'refresh_token', 'level')
+    //             ->where('email', '=', $email)
+    //             ->firstOrFail();
+
+    //         if (!password_verify($pass, $user->passwd)) {
+
+    //             throw new \Exception("password check failed");
+    //         }
+    //         unset($user->passwd);
+    //     } catch (ModelNotFoundException $e) {
+    //         $rs = $rs->withHeader('WWW-authenticate', 'Basic realm="lbs auth" ');
+    //         return Writer::json_error($rs, 401, 'Erreur authentification');
+    //     } catch (\Exception $e) {
+
+    //         $rs = $rs->withHeader('WWW-authenticate', 'Basic realm="lbs auth" ');
+    //         return Writer::json_error($rs, 401, "Erreur authentification. " . $e->getMessage());
+    //     }
 
 
-        try {
-            $secret = $this->container->settings['secret'];
-            $h = $rq->getHeader('Authorization')[0];
-            $tokenstring = sscanf($h, "Bearer %s")[0];
-            $token = JWT::decode($tokenstring, new Key($secret, 'HS512'));
+    //     $secret = $this->container->settings['secret'];
+    //     $token = JWT::encode(
+    //         [
+    //             'iss' => 'http://api.auth.local/auth',
+    //             'aud' => 'http://api.backoffice.local',
+    //             'iat' => time(),
+    //             'exp' => time() + (12 * 30 * 24 * 3600),
+    //             'upr' => [
+    //                 'email' => $user->email,
+    //                 'username' => $user->username,
+    //                 'level' => $user->level
+    //             ]
+    //         ],
+    //         $secret,
+    //         'HS512'
+    //     );
 
-            $data =  [
-                'email' => $token->upr->email,
-                'username' => $token->upr->username,
-                'level' => $token->upr->level
-            ];
-        } catch (ExpiredException $e) {
-            return Writer::json_error($rs, 401, 'Le token a expiré. error message:' . $e->getMessage()); // a tester l'expiration du token
-        } catch (SignatureInvalidException $e) {
-            return Writer::json_error($rs, 401, 'SignatureInvalidException. error message:' . $e->getMessage());
-        } catch (BeforeValidException $e) {
-            return Writer::json_error($rs, 401, 'BeforeValidException. error message:' . $e->getMessage()); // Comment on teste cette erreur
-        } catch (\UnexpectedValueException $e) {
-            return Writer::json_error($rs, 401, 'Valuer unexpected. error message:' . $e->getMessage());
-        };
-        return Writer::json_output($rs, 200, $data);
-    }
+    //     $user->refresh_token = bin2hex(random_bytes(32));
+    //     $user->save();
+    //     $data = [
+    //         'access-token' => $token,
+    //         'refresh-token' => $user->refresh_token
+    //     ];
+
+    //     return Writer::json_output($rs, 200, $data);
+    // }
+
+    // public function checkValiditeToken(Request $rq, Response $rs, $args)
+    // {
+
+    //     if (!$rq->hasHeader('Authorization')) {
+
+    //         $rs = $rs->withHeader('WWW-authenticate', 'Basic realm="commande_api api" ');
+    //         return Writer::json_error($rs, 401, 'No Authorization header present');
+    //     };
+
+
+    //     try {
+    //         $secret = $this->container->settings['secret'];
+    //         $h = $rq->getHeader('Authorization')[0];
+    //         $tokenstring = sscanf($h, "Bearer %s")[0];
+    //         $token = JWT::decode($tokenstring, new Key($secret, 'HS512'));
+
+    //         $data =  [
+    //             'email' => $token->upr->email,
+    //             'username' => $token->upr->username,
+    //             'level' => $token->upr->level
+    //         ];
+    //     } catch (ExpiredException $e) {
+    //         return Writer::json_error($rs, 401, 'Le token a expiré. error message:' . $e->getMessage()); // a tester l'expiration du token
+    //     } catch (SignatureInvalidException $e) {
+    //         return Writer::json_error($rs, 401, 'SignatureInvalidException. error message:' . $e->getMessage());
+    //     } catch (BeforeValidException $e) {
+    //         return Writer::json_error($rs, 401, 'BeforeValidException. error message:' . $e->getMessage()); // Comment on teste cette erreur
+    //     } catch (\UnexpectedValueException $e) {
+    //         return Writer::json_error($rs, 401, 'Valuer unexpected. error message:' . $e->getMessage());
+    //     };
+    //     return Writer::json_output($rs, 200, $data);
+    // }
 }
