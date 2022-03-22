@@ -74,42 +74,35 @@ class Controller
         }
         //VALIDATOR
         if (v::stringType()->validate($command_data['nom']) != true) {
-            $rs = $rs->withStatus(400)->withHeader('Content-Type', 'application/json;charset=utf-8');
-            $rs->getBody()->write("error incorrect value for:nom");
-            return $rs;
+            return Writer::json_error($rs, 400, "incorrect value for: nom");
         }
         if (v::stringType()->validate($command_data['prenom']) != true) {
-            $rs = $rs->withStatus(400)->withHeader('Content-Type', 'application/json;charset=utf-8');
-            $rs->getBody()->write("error incorrect value for: prenom");
-            return $rs;
+            return Writer::json_error($rs, 400, "incorrect value for: prenom");
         }
         if (v::stringType()->validate($command_data['password']) != true) {
-            $rs = $rs->withStatus(400)->withHeader('Content-Type', 'application/json;charset=utf-8');
-            $rs->getBody()->write("error incorrect value for: password");
-            return $rs;
+            return Writer::json_error($rs, 400, "incorrect value for: password");
         }
         if ($command_data['sexe'] !== "M") {
             if ($command_data['sexe'] !== "F") {
-                $rs = $rs->withStatus(400)->withHeader('Content-Type', 'application/json;charset=utf-8');
-                $rs->getBody()->write("error incorrect value for: sexe ( must be F or M )");
-                return $rs;
+                return Writer::json_error($rs, 400, "incorrect value for: sexe ( must be F or M )");
             }
         }
         if (v::email()->validate($command_data['mail']) != true) {
-            $rs = $rs->withStatus(400)->withHeader('Content-Type', 'application/json;charset=utf-8');
-            $rs->getBody()->write("error incorrect value for:mail");
-            return $rs;
+            return Writer::json_error($rs, 400, "incorrect value for: mail");
         }
 
 
-
+        $user = User::Get()->where('mail', 'like', filter_var($command_data['mail'], FILTER_SANITIZE_EMAIL));
+        if ($user != null) {
+            return Writer::json_error($rs, 400, "mail already exists");
+        }
 
 
 
         try {
             $rs = $rs->withStatus(201)->withHeader('Content-Type', 'application/json;charset=utf-8');
             $cost = 10;
-            
+
             $c = new User();
             $id = Str::uuid()->toString();
             $c->id = $id;
