@@ -9,40 +9,50 @@ DROP TABLE IF EXISTS `commenter`;
 CREATE TABLE `commenter` (
   `id_rdv` varchar(100) NOT NULL,
   `id_user` varchar(100) NOT NULL,
-  `libelle` varchar(256) NOT NULL,
+  `message` varchar(256) NOT NULL,
   KEY `id_rdv` (`id_rdv`),
   KEY `id_user` (`id_user`),
   CONSTRAINT `commenter_ibfk_1` FOREIGN KEY (`id_rdv`) REFERENCES `rdv` (`id`),
   CONSTRAINT `commenter_ibfk_2` FOREIGN KEY (`id_user`) REFERENCES `user` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
+INSERT INTO `commenter` (`id_rdv`, `id_user`, `message`) VALUES
+('2650ff90-6659-49f8-b729-f45dd49864c0',	'24fc6110-26ab-4f1d-8448-21dd72d58fb3',	'Je ne viens pas');
 
 DROP TABLE IF EXISTS `participer`;
 CREATE TABLE `participer` (
   `id_rdv` varchar(100) NOT NULL,
   `id_user` varchar(100) NOT NULL,
+  `statut` varchar(100) NOT NULL,
   KEY `id_rdv` (`id_rdv`),
   KEY `id_user` (`id_user`),
   CONSTRAINT `participer_ibfk_1` FOREIGN KEY (`id_rdv`) REFERENCES `rdv` (`id`),
   CONSTRAINT `participer_ibfk_2` FOREIGN KEY (`id_user`) REFERENCES `user` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
+INSERT INTO `participer` (`id_rdv`, `id_user`, `statut`) VALUES
+('0eca0bd0-b3ef-4009-81f6-fd887f255c0d',	'24fc6110-26ab-4f1d-8448-21dd72d58fb3',	'oui'),
+('0eca0bd0-b3ef-4009-81f6-fd887f255c0d',	'oui',	'non'),
+('2650ff90-6659-49f8-b729-f45dd49864c0',	'24fc6110-26ab-4f1d-8448-21dd72d58fb3',	'non');
 
 DROP TABLE IF EXISTS `rdv`;
 CREATE TABLE `rdv` (
   `id` varchar(100) NOT NULL,
-  `lat` decimal(8,2) NOT NULL,
-  `long` decimal(8,2) NOT NULL,
+  `lat` varchar(20) NOT NULL,
+  `long` varchar(20) NOT NULL,
   `libelle_event` varchar(128) NOT NULL,
   `libelle_lieu` varchar(128) NOT NULL,
-  `horraire` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `horaire` time NOT NULL,
   `date` date NOT NULL,
+  `createur_id` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
-INSERT INTO `rdv` (`id`, `lat`, `long`, `libelle_event`, `libelle_lieu`, `horraire`, `date`) VALUES
-('Ararara',	48.86,	2.35,	'Boom',	'Paris',	'2022-03-21 13:51:52',	'0000-00-00'),
-('gysgygs',	48.69,	6.18,	'Reunion',	'Nancy',	'2022-03-21 13:51:52',	'0000-00-00');
+INSERT INTO `rdv` (`id`, `lat`, `long`, `libelle_event`, `libelle_lieu`, `horaire`, `date`, `createur_id`) VALUES
+('0eca0bd0-b3ef-4009-81f6-fd887f255c0d',	'46.702246',	'7.703246',	'Cinema',	'Nancy',	'21:30:00',	'2022-04-02',	'24fc6110-26ab-4f1d-8448-21dd72d58fb3'),
+('2650ff90-6659-49f8-b729-f45dd49864c0',	'48.703246',	'48.703246',	'Soiree de ouf',	'lieu',	'17:20:00',	'2022-05-23',	'24fc6110-26ab-4f1d-8448-21dd72d58fb3'),
+('Ararara',	'48.703246',	'6.157385',	'Boom',	'Paris',	'13:51:52',	'0000-00-00',	''),
+('gysgygs',	'48.69',	'6.18',	'Reunion',	'Nancy',	'13:51:52',	'0000-00-00',	'');
 
 DROP TABLE IF EXISTS `user`;
 CREATE TABLE `user` (
@@ -65,4 +75,4 @@ INSERT INTO `user` (`id`, `nom`, `prenom`, `mail`, `sexe`, `password`, `token`, 
 ('oui4',	'Amagat',	'Thibault',	'thibault.amagat@mail.com',	'M',	'test',	'',	'0000-00-00'),
 ('oui5',	'Yoda',	'Maitre',	'maitre.yoda@mail.com',	'M',	'test',	'',	'0000-00-00');
 
--- 2022-03-23 08:37:05
+-- 2022-03-23 15:11:30
