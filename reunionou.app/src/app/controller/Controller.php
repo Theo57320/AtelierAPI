@@ -204,19 +204,19 @@ class Controller
         $event_data = $rq->getParsedBody();
 
         if (!isset($event_data['lat'])) {
-            return Writer::json_error($rs, 400, "missing data : nom");
+            return Writer::json_error($rs, 400, "missing data : lat");
         }
         if (!isset($event_data['long'])) {
-            return Writer::json_error($rs, 400, "missing data : prenom");
+            return Writer::json_error($rs, 400, "missing data : long");
         }
         if (!isset($event_data['libelle_event'])) {
-            return Writer::json_error($rs, 400, "missing data : sexe");
+            return Writer::json_error($rs, 400, "missing data : libelle_event");
         }
         if (!isset($event_data['libelle_lieu'])) {
-            return Writer::json_error($rs, 400, "missing data : password");
+            return Writer::json_error($rs, 400, "missing data : libelle_lieu");
         }
-        if (!isset($event_data['horraire'])) {
-            return Writer::json_error($rs, 400, "missing data : password");
+        if (!isset($event_data['horaire'])) {
+            return Writer::json_error($rs, 400, "missing data : horaire");
         }
         if (!isset($event_data['date'])) {
             return Writer::json_error($rs, 400, "missing data : date");
@@ -234,15 +234,15 @@ class Controller
         if (v::stringType()->validate($event_data['libelle_lieu']) != true) {
             return Writer::json_error($rs, 400, "incorrect value for: libelle_lieu");
         }
-        if (v::date('Y-m-d')()->validate($event_data['date']) != true) {
+        if (v::date('Y-m-d')->validate($event_data['date']) != true) {
             return Writer::json_error($rs, 400, "incorrect value or format for: date");
         }
-        if (v::time('H:i:s')->validate($event_data['horraire']) != true) {
-            return Writer::json_error($rs, 400, "incorrect value or format for: horraire");
+        if (v::stringType()->validate($event_data['horaire']) != true) {
+            return Writer::json_error($rs, 400, "incorrect value or format for: horaire");
         }
         $token = $rq->getQueryParam('token', null);
         $createur_id = User::where('token', '=', $token)
-        ->get('id');
+            ->get('id');
 
         try {
             $rs = $rs->withStatus(201)->withHeader('Content-Type', 'application/json;charset=utf-8');
@@ -252,11 +252,17 @@ class Controller
             $r->lat = $event_data['lat'];
             $r->long = $event_data['long'];
             $r->libelle_event = $event_data['libelle_event'];
-            $r->horraire = $event_data['horraire'];
+            $r->libelle_lieu = $event_data['libelle_lieu'];
+            $r->horaire = $event_data['horaire'];
             $r->date = $event_data['date'];
-            $r->createur_id = $createur_id;
+            $r->createur_id = $createur_id[0]['id'];
             $r->save();
 
+            $p = new Participer();
+            $p->id_rdv = $id;
+            $p->id_user = $createur_id[0]['id'];
+            $p->statut='oui';
+            $p->save();
 
             $rs->getBody()->write(json_encode($r)); //erreur DEMANDER AU PROF
             return $rs;
@@ -267,5 +273,181 @@ class Controller
         }
     }
 
-    
+    public function MyEvents(Request $req, Response $resp, array $args): Response
+    {
+        $token = $req->getQueryParam('token', null);
+
+        $user = User::where('token', '=', $token)
+            ->get();
+        $events = Rdv::where("createur_id", "like", $user[0]['id'])->get()->sortBy('date');
+        if (isset($events)) {
+            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp->getBody()->write(json_encode([
+                "type" => "collection",
+                "count" => count($events),
+                "events" => $events,
+            ]));
+            return $resp;
+        } else {
+            return Writer::json_error($resp, 404, "you have not yet created an event'");
+            // return Writer::json_error($resp, 404, $user);
+        }
+    }
+
+    public function myEventbyId(Request $req, Response $resp, array $args): Response
+    {
+        $token = $req->getQueryParam('token', null);
+        $id = $args['id'];
+        $event = Rdv::Get()
+            ->where('id', '=', $id);
+        $userToken = User::Get()
+            ->where('token', '=', $token);
+        if ($event[0]['createur_id'] == $userToken[0]['id']) {
+            $res["type"] = "event";
+            $res["infos"] = $event[0];
+            $tableParticiper = Participer::Get()
+                ->where('id_rdv', '=', $id)->where('statut', 'like', 'oui');
+            $i = 0;
+            foreach ($tableParticiper as $value) {
+                $user = User::Where('id', 'like', $value["id_user"])->get(['nom', 'prenom']);
+                $res["users"][$i] = $user[0];
+                $i++;
+            }
+
+
+            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp->getBody()->write(json_encode($res));
+            return $resp;
+        } else {
+            return Writer::json_error($resp, 404, "you are not the creator of this event'");
+        }
+    }
+
+    public function AllmyEvents(Request $req, Response $resp, array $args): Response
+    {
+        $token = $req->getQueryParam('token', null);
+
+        $user = User::Get()
+            ->where('token', '=', $token);
+        $res["type"] = "event";
+        $tableParticiper = Participer::Get()
+            ->where('id_user', '=', $user[0]['id']);
+        $i = 0;
+        foreach ($tableParticiper as $value) {
+            $rdv = RDV::Where('id', 'like', $value["id_rdv"])->get(['lat', 'long', 'libelle_event', 'libelle_lieu', 'horaire', 'date', 'createur_id']);
+            $res["events"][$i] = $rdv[0];
+            $tableParticipants = Participer::Get()
+                ->where('id_rdv', '=', $value["id_rdv"])->where('statut', 'like', 'oui');
+            $a = 0;
+            foreach ($tableParticipants as $p) {
+                $participant = User::Where('id', 'like', $p["id_user"])->get(['nom', 'prenom']);
+                $part[$a] = $participant[0];
+                $a++;
+            };
+            $i++;
+        }
+        $res["events"][$i]['participants'] = $part;
+        $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+        $resp->getBody()->write(json_encode($res));
+        return $resp;
+    }
+
+    public function Venir(Request $req, Response $resp, array $args): Response
+    {
+        $token = $req->getQueryParam('token', null);
+        $id= $args['id'];
+        $user = User::where('token', '=', $token)
+            ->get();
+        $event = Rdv::where("id", "like", $id)->get();
+        if (isset($event[0])) {
+           
+            $p = Participer::where("id_rdv", "like", $id)
+            ->where("id_user",'like',$user[0]['id'])
+            ->get();
+            if(isset($p[0])){
+                if($p[0]['statut'] =='oui'){
+                    return Writer::json_error($resp, 401, "you already participe to this event'");
+                }else{
+                    Participer::where("id_rdv", "like", $id)
+                    ->where("id_user",'like',$user[0]['id'])
+                    ->update(['statut'=>'oui']);
+                    $c = new Commenter();
+                    $c->id_rdv = $id;
+                    $c->id_user = $user[0]['id'];
+                    $c->message='Je viens';
+                    $c->save();
+                }
+                
+            }else{
+                $p = new Participer();
+                $p->id_rdv = $id;
+                $p->id_user = $user[0]['id'];
+                $p->statut='oui';
+                $p->save();
+                $c = new Commenter();
+                $c->id_rdv = $id;
+                $c->id_user = $user[0]['id'];
+                $c->message='Je viens';
+                $c->save();
+            }
+            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp->getBody()->write(json_encode([
+                "type" => "collection",
+                "oui" => 'Vous participez',
+                "events" => $event,
+            ]));
+            return $resp;
+        } else {
+            return Writer::json_error($resp, 404, "This event does not exist");
+        }
+    }
+    public function PasVenir(Request $req, Response $resp, array $args): Response
+    {
+        $token = $req->getQueryParam('token', null);
+        $id= $args['id'];
+        $user = User::where('token', '=', $token)
+            ->get();
+        $event = Rdv::where("id", "like", $id)->get();
+        if (isset($event[0])) {
+           
+            $p = Participer::where("id_rdv", "like", $id)
+            ->where("id_user",'like',$user[0]['id'])
+            ->get();
+            if(isset($p[0])){
+                if($p[0]['statut'] =='non'){
+                    return Writer::json_error($resp, 401, "you already not participe to this event'");
+                }else{
+                    Participer::where("id_rdv", "like", $id)
+                    ->where("id_user",'like',$user[0]['id'])
+                    ->update(['statut'=>'non']);
+                    $c = new Commenter();
+                    $c->id_rdv = $id;
+                    $c->id_user = $user[0]['id'];
+                    $c->message='Je ne viens pas';
+                    $c->save();
+                }
+                
+            }else{
+                $p = new Participer();
+                $p->id_rdv = $id;
+                $p->id_user = $user[0]['id'];
+                $p->statut='non';
+                $p->save();
+                $c = new Commenter();
+                $c->id_rdv = $id;
+                $c->id_user = $user[0]['id'];
+                $c->message='Je ne viens pas';
+                $c->save();
+            }
+            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp->getBody()->write(json_encode([
+                "type" => "collection",
+                "non" => 'Vous ne participez pas',
+                "events" => $event,
+            ]));
+            return $resp;
+        } else {
+            return Writer::json_error($resp, 404, "This event does not exist");
+        }
+    }
 }
