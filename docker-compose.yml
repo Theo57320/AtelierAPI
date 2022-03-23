@@ -37,8 +37,8 @@ services:
       - '19280:80'
       - '19200:820'
     volumes:
-      - './reunionou.mobile_service/public:/var/www/public'
-      - './reunionou.mobile_service/src:/var/www/src'
+      - './reunionou.mobile/public:/var/www/public'
+      - './reunionou.mobile/src:/var/www/src'
     working_dir: /var/www/src
     networks:
       - reunionou.net
@@ -57,15 +57,33 @@ services:
       - '19380:80'
       - '19300:830'
     volumes:
-      - './reunionou.back_service/public:/var/www/public'
-      - './reunionou.back_service/src:/var/www/src'
+      - './reunionou.back/public:/var/www/public'
+      - './reunionou.back/src:/var/www/src'
     working_dir: /var/www/src
     networks:
       - reunionou.net
     depends_on:
       - mysql.reunionou
 
+  
+  #auth
 
+  api.reunion.auth:
+    image: 'canals/php:latest'
+    environment:
+      - VHOST_HOSTNAME=api.reunionou.auth
+      - VHOST_DOCROOT=/var/www/public
+    ports:
+      - '19480:80'
+      - '19400:830'
+    volumes:
+      - './reunionou.auth/public:/var/www/public'
+      - './reunionou.auth/src:/var/www/src'
+    working_dir: /var/www/src
+    networks:
+      - reunionou.net
+    depends_on:
+      - mysql.reunionou
 
   #Mysql
   mysql.reunionou:

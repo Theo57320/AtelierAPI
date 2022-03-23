@@ -53,16 +53,16 @@ CREATE TABLE `user` (
   `sexe` varchar(1) NOT NULL,
   `password` varchar(256) NOT NULL,
   `token` varchar(256) NOT NULL,
+  `dateConnexion` date NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
-INSERT INTO `user` (`id`, `nom`, `prenom`, `mail`, `sexe`, `password`, `token`) VALUES
-('24fc6110-26ab-4f1d-8448-21dd72d58fb3',	'jean mi',	'test',	'jm@gmal.com',	'M',	'$2y$10$Rep7woXeZJFv8pU788Zvluobh4oK4nRiWKVIiGtXrrI.FUf.eDkti',	'2a17020d2ec1739c843daa114ce928accc74f86192b3d604560026a2a6d62c37'),
-('925bd29d-00e1-45da-afa5-d5b74354bfc0',	'jean mi',	'test',	'jm@gmal.com',	'M',	'test',	'c282030f168796d74f57237251a0f1770fd8f32d5c1b6c0da62b653e0bd49493'),
-('oui',	'Georg',	'Hugo',	'hugo.georg@mail.com',	'M',	'test',	''),
-('Oui2',	'Antolini',	'Theo',	'theo.antolini@mail.com',	'M',	'test',	''),
-('oui3',	'Bardet',	'Valentin',	'valentin.bardet@mail.com',	'M',	'test',	''),
-('oui4',	'Amagat',	'Thibault',	'thibault.amagat@mail.com',	'M',	'test',	''),
-('oui5',	'Yoda',	'Maitre',	'maitre.yoda@mail.com',	'M',	'test',	'');
+INSERT INTO `user` (`id`, `nom`, `prenom`, `mail`, `sexe`, `password`, `token`, `dateConnexion`) VALUES
+('24fc6110-26ab-4f1d-8448-21dd72d58fb3',	'oui',	'test@test.com',	'test@oui.az',	'M',	'$2y$10$/HXHPMNpICrpZdtaZ89VxeP/mxiHEOEmkCA4hHYMRqyMiktbXNWEy',	'4c252d21a886af0c69ca6180f5dcb7994d297a39d70c8b9940879b3a45b3257a',	'2022-03-23'),
+('oui',	'Georg',	'Hugo',	'hugo.georg@mail.com',	'M',	'test',	'',	'0000-00-00'),
+('Oui2',	'Antolini',	'Theo',	'theo.antolini@mail.com',	'M',	'test',	'',	'0000-00-00'),
+('oui3',	'Bardet',	'Valentin',	'valentin.bardet@mail.com',	'M',	'test',	'',	'0000-00-00'),
+('oui4',	'Amagat',	'Thibault',	'thibault.amagat@mail.com',	'M',	'test',	'',	'0000-00-00'),
+('oui5',	'Yoda',	'Maitre',	'maitre.yoda@mail.com',	'M',	'test',	'',	'0000-00-00');
 
--- 2022-03-22 09:11:01
+-- 2022-03-23 08:37:05

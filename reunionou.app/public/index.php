@@ -10,6 +10,12 @@ require_once  __DIR__ . '/../src/vendor/autoload.php';
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
 use reu\app\app\controller\Controller as Controller;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+
+use reu\app\app\middlewares\Token as Token;
+use reu\app\app\utils\Writer;
+
+use reu\app\app\models\User as User;
 
 $configuration = [
     'settings' => [
@@ -71,6 +77,23 @@ $db->addConnection($c->dbconf); /* configuration avec nos paramètres */
 $db->setAsGlobal(); /* rendre la connexion visible dans tout le projet */
 $db->bootEloquent();
 
+function checkToken(Request $rq, Response $rs, callable $next)
+{
+    // récupérer l'identifiant de cmmde dans la route et le token
+    // $id = $rq->getAttribute('route')->getArgument( 'id');
+    $token = $rq->getQueryParam('token', null);
+    // vérifier que le token correspond à la commande
+    try {
+        User::where('token', '=', $token)
+            // ->where('id', '=', $id)
+            ->firstOrFail();
+    } catch (ModelNotFoundException $e) {
+        return Writer::json_error($rs, 400, "erreur param token inexistant ou invalide");
+        return $rs;
+    };
+    return $next($rq, $rs);
+}
+
 
 $app->get(
     '/users[/]',
@@ -78,14 +101,14 @@ $app->get(
         $ctrl = new Controller($this);
         return $ctrl->listUsers($req, $resp, $args);
     }
-);
+)->add('checkToken');
 $app->get(
     '/events[/]',
     function (Request $req, Response $resp, $args): Response {
         $ctrl = new Controller($this);
         return $ctrl->listEvents($req, $resp, $args);
     }
-);
+)->add('checkToken');
 $app->post(
     '/register[/]',
     function (Request $req, Response $resp, $args): Response {
@@ -93,5 +116,29 @@ $app->post(
         return $ctrl->register($req, $resp, $args);
     }
 );
+$app->get(
+    '/myPage[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->myPage($req, $resp, $args);
+    }
+)->add('checkToken');
+
+$app->post(
+    '/updateUser[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->Update($req, $resp, $args);
+    }
+)->add('checkToken');
+
+$app->post(
+    '/lastConnection[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->lastConnection($req, $resp, $args);
+    }
+)->add('checkToken');
+
 
 $app->run();
