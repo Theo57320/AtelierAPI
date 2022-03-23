@@ -199,4 +199,73 @@ class Controller
         $resp->getBody()->write(json_encode($user));
         return $resp;
     }
+    function PostEvent(Request $rq, Response $rs, array $event_data): Response
+    {
+        $event_data = $rq->getParsedBody();
+
+        if (!isset($event_data['lat'])) {
+            return Writer::json_error($rs, 400, "missing data : nom");
+        }
+        if (!isset($event_data['long'])) {
+            return Writer::json_error($rs, 400, "missing data : prenom");
+        }
+        if (!isset($event_data['libelle_event'])) {
+            return Writer::json_error($rs, 400, "missing data : sexe");
+        }
+        if (!isset($event_data['libelle_lieu'])) {
+            return Writer::json_error($rs, 400, "missing data : password");
+        }
+        if (!isset($event_data['horraire'])) {
+            return Writer::json_error($rs, 400, "missing data : password");
+        }
+        if (!isset($event_data['date'])) {
+            return Writer::json_error($rs, 400, "missing data : date");
+        }
+        //VALIDATOR
+        if (v::floatVal()->validate($event_data['lat']) != true) {
+            return Writer::json_error($rs, 400, "incorrect value for: lat");
+        }
+        if (v::floatVal()->validate($event_data['long']) != true) {
+            return Writer::json_error($rs, 400, "incorrect value for: long");
+        }
+        if (v::stringType()->validate($event_data['libelle_event']) != true) {
+            return Writer::json_error($rs, 400, "incorrect value for: libelle_event");
+        }
+        if (v::stringType()->validate($event_data['libelle_lieu']) != true) {
+            return Writer::json_error($rs, 400, "incorrect value for: libelle_lieu");
+        }
+        if (v::date('Y-m-d')()->validate($event_data['date']) != true) {
+            return Writer::json_error($rs, 400, "incorrect value or format for: date");
+        }
+        if (v::time('H:i:s')->validate($event_data['horraire']) != true) {
+            return Writer::json_error($rs, 400, "incorrect value or format for: horraire");
+        }
+        $token = $rq->getQueryParam('token', null);
+        $createur_id = User::where('token', '=', $token)
+        ->get('id');
+
+        try {
+            $rs = $rs->withStatus(201)->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $r = new Rdv();
+            $id = Str::uuid()->toString();
+            $r->id = $id;
+            $r->lat = $event_data['lat'];
+            $r->long = $event_data['long'];
+            $r->libelle_event = $event_data['libelle_event'];
+            $r->horraire = $event_data['horraire'];
+            $r->date = $event_data['date'];
+            $r->createur_id = $createur_id;
+            $r->save();
+
+
+            $rs->getBody()->write(json_encode($r)); //erreur DEMANDER AU PROF
+            return $rs;
+        } catch (\Exception $e) {
+            $rs = $rs->withStatus(500)->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $rs->getBody()->write($e->getMessage());
+            return $rs;
+        }
+    }
+
+    
 }
