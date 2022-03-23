@@ -136,9 +136,44 @@ $app->post(
     '/lastConnection[/]',
     function (Request $req, Response $resp, $args): Response {
         $ctrl = new Controller($this);
-        return $ctrl->lastConnection($req, $resp, $args);
+        return $ctrl->PostEvent($req, $resp, $args);
     }
 )->add('checkToken');
 
+$app->get(
+    '/myEvents[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->myEvents($req, $resp, $args);
+    }
+)->add('checkToken');
+$app->get(
+    '/myEvent/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->myEventbyId($req, $resp, $args);
+    }
+)->add('checkToken');
+$app->get(
+    '/AllMyEvents[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->AllmyEvents($req, $resp, $args);
+    }
+)->add('checkToken');
+$app->post(
+    '/Venir/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->Venir($req, $resp, $args);
+    }
+)->add('checkToken');
+$app->post(
+    '/PasVenir/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->PasVenir($req, $resp, $args);
+    }
+)->add('checkToken');
 
 $app->run();
