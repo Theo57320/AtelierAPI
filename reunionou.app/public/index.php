@@ -175,5 +175,18 @@ $app->post(
         return $ctrl->PasVenir($req, $resp, $args);
     }
 )->add('checkToken');
-
+$app->post(
+    '/AddComment/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->addComment($req, $resp, $args);
+    }
+)->add('checkToken');
+$app->get(
+    '/ListComments/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->ListComment($req, $resp, $args);
+    }
+);
 $app->run();
