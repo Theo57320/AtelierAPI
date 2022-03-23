@@ -60,17 +60,54 @@ class Controller
         return $resp;
     }
 
+//UserABSENT
 
 
+
+    
     public function userAbsent(Request $req, Response $resp, array $args): Response
     {
+
+        function date_outil($date,$nombre_jour) {
+ 
+            $year = substr($date, 0, -6);   
+            $month = substr($date, -5, -3);   
+            $day = substr($date, -2);   
+         
+            // récupère la date du jour
+            $date_string = mktime(0,0,0,$month,$day,$year);
+         
+            // Supprime les jours
+            $timestamp = $date_string - ($nombre_jour * 86400);
+            $nouvelle_date = date("Y-m-d", $timestamp); 
+         
+            // pour afficher
+           return $nouvelle_date;
+         
+            }
+
+        $Ajd = date("y-m-d");
+        $dateDiff= date_outil($Ajd,152);
+        
         $commandes = User::select(['id','nom','prenom','mail','sexe','dateConnexion'])
-        ->where('datediff(day, dateConnexion, getdate()','>','10')
+        ->where('dateConnexion','<',$dateDiff)
         ->get();
+        // var_dump($commandes);
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($commandes));
         return $resp;
     }
+   
+
+    // public function userAbsent(Request $req, Response $resp, array $args): Response
+    // {
+    //     $commandes = User::select(['id','nom','prenom','mail','sexe','dateConnexion'])
+    //     ->where('datediff(day, dateConnexion, getdate()','>','10')
+    //     ->get();
+    //     $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+    //     $resp->getBody()->write(json_encode($commandes));
+    //     return $resp;
+    // }
 
 
     //RDV
