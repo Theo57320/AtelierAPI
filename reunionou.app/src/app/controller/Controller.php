@@ -112,7 +112,7 @@ class Controller
             $c->sexe = filter_var($user_data['sexe'], FILTER_SANITIZE_STRING);
             $c->password = password_hash(filter_var($user_data['password'], FILTER_SANITIZE_STRING), PASSWORD_BCRYPT, ["cost" => $cost]);
             $c->token = bin2hex(random_bytes(32));
-            $c->dateConnexion= date("Y-m-d");
+            $c->dateConnexion = date("Y-m-d");
 
             $c->save();
 
@@ -131,6 +131,7 @@ class Controller
         $token = $req->getQueryParam('token', null);
         $user = User::where('token', '=', $token)
             ->get();
+        $resp = $resp->withHeader('Access-Control-Allow-Origin', '*');
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($user));
         return $resp;
@@ -418,7 +419,7 @@ class Controller
             ->get();
         $event = Rdv::where("id", "like", $id)->get();
         if (isset($event[0])) {
-            
+
             $p = Participer::where("id_rdv", "like", $id)
                 ->where("id_user", 'like', $user[0]['id'])
                 ->get();
@@ -473,16 +474,16 @@ class Controller
             if (v::stringType()->validate($comment) != true) {
                 return Writer::json_error($resp, 400, "incorrect format for: comment");
             }
-            $c = New Commenter();
-            $c->id_rdv= $id;
-            $c->id_user= $user[0]['id'];
-            $c->message= $comment;
+            $c = new Commenter();
+            $c->id_rdv = $id;
+            $c->id_user = $user[0]['id'];
+            $c->message = $comment;
             $c->save();
 
             $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
             $resp->getBody()->write(json_encode($c));
             return $resp;
-        }else{
+        } else {
             return Writer::json_error($resp, 404, "This event does not exist");
         }
     }
@@ -495,12 +496,12 @@ class Controller
         }
         $event = Rdv::where("id", "like", $id)->get();
         if (isset($event[0])) {
-            $comments = Commenter::where("id_rdv", 'like',$id)->get('message')->sortBy('created_at');
+            $comments = Commenter::where("id_rdv", 'like', $id)->get('message')->sortBy('created_at');
 
             $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
             $resp->getBody()->write(json_encode($comments));
             return $resp;
-        }else{
+        } else {
             return Writer::json_error($resp, 404, "This event does not exist");
         }
     }
