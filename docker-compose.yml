@@ -11,11 +11,11 @@ services:
   api.reunion.app:
     image: 'canals/php:latest'
     environment:
-      - VHOST_HOSTNAME=api.reunionou.app
+      - VHOST_HOSTNAME=api.reunionou.local
       - VHOST_DOCROOT=/var/www/public
     ports:
       - '19180:80'
-      - '19100:800'
+      - '19100:443'
     volumes:
       - './reunionou.app/public:/var/www/public'
       - './reunionou.app/src:/var/www/src'

@@ -131,8 +131,8 @@ class Controller
         $token = $req->getQueryParam('token', null);
         $user = User::where('token', '=', $token)
             ->get();
-        $resp = $resp->withHeader('Access-Control-Allow-Origin', '*');
-        $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp = $resp->   
+        $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8')->withStatus(200);
         $resp->getBody()->write(json_encode($user));
         return $resp;
     }

@@ -98,8 +98,9 @@ function checkToken(Request $rq, Response $rs, callable $next)
 $app->add(function ($req, $res, $next) {
     $response = $next($req, $res);
     return $response
-            ->withHeader('X-Requested-With', 'XmlHttpRequest')
-            ->withHeader('Access-Control-Allow-Origin', '*')
+            ->withHeader('Access-Control-Allow-Origin', $req->getHeader('Origin'))
+            ->withHeader('Access-Control-Allow-Methods', 'POST, PUT, OPTIONS, GET, DELETE')
+            ->withHeader('Access-Control-Allow-Credentials','true')
             ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization, X-Custom-Header','XMLHttpRequest');
 });
 $app->options('/{routes:.+}', function ($request, $response, $args) {
