@@ -10,14 +10,20 @@ CREATE TABLE `commenter` (
   `id_rdv` varchar(100) NOT NULL,
   `id_user` varchar(100) NOT NULL,
   `message` varchar(256) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00' ON UPDATE current_timestamp(),
   KEY `id_rdv` (`id_rdv`),
   KEY `id_user` (`id_user`),
   CONSTRAINT `commenter_ibfk_1` FOREIGN KEY (`id_rdv`) REFERENCES `rdv` (`id`),
   CONSTRAINT `commenter_ibfk_2` FOREIGN KEY (`id_user`) REFERENCES `user` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
 
-INSERT INTO `commenter` (`id_rdv`, `id_user`, `message`) VALUES
-('2650ff90-6659-49f8-b729-f45dd49864c0',	'24fc6110-26ab-4f1d-8448-21dd72d58fb3',	'Je ne viens pas');
+INSERT INTO `commenter` (`id_rdv`, `id_user`, `message`, `created_at`, `updated_at`) VALUES
+('2650ff90-6659-49f8-b729-f45dd49864c0',	'24fc6110-26ab-4f1d-8448-21dd72d58fb3',	'Je ne viens pas',	'0000-00-00 00:00:00',	'0000-00-00 00:00:00'),
+('2650ff90-6659-49f8-b729-f45dd49864c0',	'24fc6110-26ab-4f1d-8448-21dd72d58fb3',	'test',	'2022-03-23 16:15:10',	'2022-03-23 16:15:10'),
+('2650ff90-6659-49f8-b729-f45dd49864c0',	'24fc6110-26ab-4f1d-8448-21dd72d58fb3',	'test',	'2022-03-23 16:15:12',	'2022-03-23 16:15:12'),
+('2650ff90-6659-49f8-b729-f45dd49864c0',	'24fc6110-26ab-4f1d-8448-21dd72d58fb3',	'test',	'2022-03-23 16:15:13',	'2022-03-23 16:15:13'),
+('2650ff90-6659-49f8-b729-f45dd49864c0',	'24fc6110-26ab-4f1d-8448-21dd72d58fb3',	'test',	'2022-03-23 16:15:13',	'2022-03-23 16:15:13');
 
 DROP TABLE IF EXISTS `participer`;
 CREATE TABLE `participer` (
@@ -69,10 +75,11 @@ CREATE TABLE `user` (
 
 INSERT INTO `user` (`id`, `nom`, `prenom`, `mail`, `sexe`, `password`, `token`, `dateConnexion`) VALUES
 ('24fc6110-26ab-4f1d-8448-21dd72d58fb3',	'oui',	'test@test.com',	'test@oui.az',	'M',	'$2y$10$/HXHPMNpICrpZdtaZ89VxeP/mxiHEOEmkCA4hHYMRqyMiktbXNWEy',	'4c252d21a886af0c69ca6180f5dcb7994d297a39d70c8b9940879b3a45b3257a',	'2022-03-23'),
+('9d6eb3c3-7bf6-4b7d-aa76-1422b112aa9d',	'jean mi',	'test',	'jm@g.com',	'M',	'$2y$10$UXkjnjahPNhxfP8sT5H6bOp1jGcE3Ha8FGWxpaBR/sTPSyNFE8Ioq',	'5c96aaadc86a534f118fb38227e6e6ad210dbc7d057d250e52f1fbec40e1d4ee',	'2022-03-23'),
 ('oui',	'Georg',	'Hugo',	'hugo.georg@mail.com',	'M',	'test',	'',	'0000-00-00'),
 ('Oui2',	'Antolini',	'Theo',	'theo.antolini@mail.com',	'M',	'test',	'',	'0000-00-00'),
 ('oui3',	'Bardet',	'Valentin',	'valentin.bardet@mail.com',	'M',	'test',	'',	'0000-00-00'),
 ('oui4',	'Amagat',	'Thibault',	'thibault.amagat@mail.com',	'M',	'test',	'',	'0000-00-00'),
 ('oui5',	'Yoda',	'Maitre',	'maitre.yoda@mail.com',	'M',	'test',	'',	'0000-00-00');
 
--- 2022-03-23 15:11:30
+-- 2022-03-23 16:30:03

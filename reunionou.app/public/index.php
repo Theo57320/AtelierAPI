@@ -20,6 +20,7 @@ use reu\app\app\models\User as User;
 $configuration = [
     'settings' => [
         'displayErrorDetails' => true, // Mettre à false pour déployer l'api en mode production
+        "determineRouteBeforeAppMiddleware" => true,
     ],
     'dbconf' => function ($c) {
         return parse_ini_file(__DIR__ . '/../src/app/conf/reu.db.conf.ini');
@@ -79,6 +80,7 @@ $db->bootEloquent();
 
 function checkToken(Request $rq, Response $rs, callable $next)
 {
+   
     // récupérer l'identifiant de cmmde dans la route et le token
     // $id = $rq->getAttribute('route')->getArgument( 'id');
     $token = $rq->getQueryParam('token', null);
@@ -93,7 +95,17 @@ function checkToken(Request $rq, Response $rs, callable $next)
     };
     return $next($rq, $rs);
 }
-
+$app->add(function ($req, $res, $next) {
+    $response = $next($req, $res);
+    return $response
+            ->withHeader('Access-Control-Allow-Origin', $req->getHeader('Origin'))
+            ->withHeader('Access-Control-Allow-Methods', 'POST, PUT, OPTIONS, GET, DELETE')
+            ->withHeader('Access-Control-Allow-Credentials','true')
+            ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization, X-Custom-Header','XMLHttpRequest');
+});
+$app->options('/{routes:.+}', function ($request, $response, $args) {
+    return $response;
+});
 
 $app->get(
     '/users[/]',
@@ -175,5 +187,23 @@ $app->post(
         return $ctrl->PasVenir($req, $resp, $args);
     }
 )->add('checkToken');
+$app->post(
+    '/AddComment/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->addComment($req, $resp, $args);
+    }
+)->add('checkToken');
+$app->get(
+    '/ListComments/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->ListComment($req, $resp, $args);
+    }
+);
 
+$app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function($req, $res) {
+    $handler = $this->notFoundHandler; // handle using the default Slim page not found handler
+    return $handler($req, $res);
+});
 $app->run();

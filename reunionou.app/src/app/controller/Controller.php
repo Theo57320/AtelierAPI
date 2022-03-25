@@ -94,7 +94,7 @@ class Controller
 
 
         $user = User::Get()->where('mail', 'like', filter_var($user_data['mail'], FILTER_SANITIZE_EMAIL));
-        if ($user !== null) {
+        if (!empty($user[0])) {
             return Writer::json_error($rs, 400, "mail already exists");
         }
 
@@ -112,6 +112,7 @@ class Controller
             $c->sexe = filter_var($user_data['sexe'], FILTER_SANITIZE_STRING);
             $c->password = password_hash(filter_var($user_data['password'], FILTER_SANITIZE_STRING), PASSWORD_BCRYPT, ["cost" => $cost]);
             $c->token = bin2hex(random_bytes(32));
+            $c->dateConnexion = date("Y-m-d");
 
             $c->save();
 
@@ -130,7 +131,8 @@ class Controller
         $token = $req->getQueryParam('token', null);
         $user = User::where('token', '=', $token)
             ->get();
-        $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp = $resp->   
+        $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8')->withStatus(200);
         $resp->getBody()->write(json_encode($user));
         return $resp;
     }
@@ -261,7 +263,7 @@ class Controller
             $p = new Participer();
             $p->id_rdv = $id;
             $p->id_user = $createur_id[0]['id'];
-            $p->statut='oui';
+            $p->statut = 'oui';
             $p->save();
 
             $rs->getBody()->write(json_encode($r)); //erreur DEMANDER AU PROF
@@ -298,6 +300,9 @@ class Controller
     {
         $token = $req->getQueryParam('token', null);
         $id = $args['id'];
+        if (v::stringType()->validate($id) != true) {
+            return Writer::json_error($resp, 400, "incorrect format for: id");
+        }
         $event = Rdv::Get()
             ->where('id', '=', $id);
         $userToken = User::Get()
@@ -355,39 +360,41 @@ class Controller
     public function Venir(Request $req, Response $resp, array $args): Response
     {
         $token = $req->getQueryParam('token', null);
-        $id= $args['id'];
+        $id = $args['id'];
+        if (v::stringType()->validate($id) != true) {
+            return Writer::json_error($resp, 400, "incorrect format for: id");
+        }
         $user = User::where('token', '=', $token)
             ->get();
         $event = Rdv::where("id", "like", $id)->get();
         if (isset($event[0])) {
-           
+
             $p = Participer::where("id_rdv", "like", $id)
-            ->where("id_user",'like',$user[0]['id'])
-            ->get();
-            if(isset($p[0])){
-                if($p[0]['statut'] =='oui'){
+                ->where("id_user", 'like', $user[0]['id'])
+                ->get();
+            if (isset($p[0])) {
+                if ($p[0]['statut'] == 'oui') {
                     return Writer::json_error($resp, 401, "you already participe to this event'");
-                }else{
+                } else {
                     Participer::where("id_rdv", "like", $id)
-                    ->where("id_user",'like',$user[0]['id'])
-                    ->update(['statut'=>'oui']);
+                        ->where("id_user", 'like', $user[0]['id'])
+                        ->update(['statut' => 'oui']);
                     $c = new Commenter();
                     $c->id_rdv = $id;
                     $c->id_user = $user[0]['id'];
-                    $c->message='Je viens';
+                    $c->message = 'Je viens';
                     $c->save();
                 }
-                
-            }else{
+            } else {
                 $p = new Participer();
                 $p->id_rdv = $id;
                 $p->id_user = $user[0]['id'];
-                $p->statut='oui';
+                $p->statut = 'oui';
                 $p->save();
                 $c = new Commenter();
                 $c->id_rdv = $id;
                 $c->id_user = $user[0]['id'];
-                $c->message='Je viens';
+                $c->message = 'Je viens';
                 $c->save();
             }
             $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
@@ -404,39 +411,41 @@ class Controller
     public function PasVenir(Request $req, Response $resp, array $args): Response
     {
         $token = $req->getQueryParam('token', null);
-        $id= $args['id'];
+        $id = $args['id'];
+        if (v::stringType()->validate($id) != true) {
+            return Writer::json_error($resp, 400, "incorrect format for: id");
+        }
         $user = User::where('token', '=', $token)
             ->get();
         $event = Rdv::where("id", "like", $id)->get();
         if (isset($event[0])) {
-           
+
             $p = Participer::where("id_rdv", "like", $id)
-            ->where("id_user",'like',$user[0]['id'])
-            ->get();
-            if(isset($p[0])){
-                if($p[0]['statut'] =='non'){
+                ->where("id_user", 'like', $user[0]['id'])
+                ->get();
+            if (isset($p[0])) {
+                if ($p[0]['statut'] == 'non') {
                     return Writer::json_error($resp, 401, "you already not participe to this event'");
-                }else{
+                } else {
                     Participer::where("id_rdv", "like", $id)
-                    ->where("id_user",'like',$user[0]['id'])
-                    ->update(['statut'=>'non']);
+                        ->where("id_user", 'like', $user[0]['id'])
+                        ->update(['statut' => 'non']);
                     $c = new Commenter();
                     $c->id_rdv = $id;
                     $c->id_user = $user[0]['id'];
-                    $c->message='Je ne viens pas';
+                    $c->message = 'Je ne viens pas';
                     $c->save();
                 }
-                
-            }else{
+            } else {
                 $p = new Participer();
                 $p->id_rdv = $id;
                 $p->id_user = $user[0]['id'];
-                $p->statut='non';
+                $p->statut = 'non';
                 $p->save();
                 $c = new Commenter();
                 $c->id_rdv = $id;
                 $c->id_user = $user[0]['id'];
-                $c->message='Je ne viens pas';
+                $c->message = 'Je ne viens pas';
                 $c->save();
             }
             $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
@@ -445,6 +454,52 @@ class Controller
                 "non" => 'Vous ne participez pas',
                 "events" => $event,
             ]));
+            return $resp;
+        } else {
+            return Writer::json_error($resp, 404, "This event does not exist");
+        }
+    }
+    public function addComment(Request $req, Response $resp, array $args): Response
+    {
+        $token = $req->getQueryParam('token', null);
+        $comment = $req->getQueryParam('comment', null);
+        $id = $args['id'];
+        if (v::stringType()->validate($id) != true) {
+            return Writer::json_error($resp, 400, "incorrect format for: id");
+        }
+        $user = User::where('token', '=', $token)
+            ->get();
+        $event = Rdv::where("id", "like", $id)->get();
+        if (isset($event[0])) {
+            if (v::stringType()->validate($comment) != true) {
+                return Writer::json_error($resp, 400, "incorrect format for: comment");
+            }
+            $c = new Commenter();
+            $c->id_rdv = $id;
+            $c->id_user = $user[0]['id'];
+            $c->message = $comment;
+            $c->save();
+
+            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp->getBody()->write(json_encode($c));
+            return $resp;
+        } else {
+            return Writer::json_error($resp, 404, "This event does not exist");
+        }
+    }
+
+    public function listComment(Request $req, Response $resp, array $args): Response
+    {
+        $id = $args['id'];
+        if (v::stringType()->validate($id) != true) {
+            return Writer::json_error($resp, 400, "incorrect format for: id");
+        }
+        $event = Rdv::where("id", "like", $id)->get();
+        if (isset($event[0])) {
+            $comments = Commenter::where("id_rdv", 'like', $id)->get('message')->sortBy('created_at');
+
+            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp->getBody()->write(json_encode($comments));
             return $resp;
         } else {
             return Writer::json_error($resp, 404, "This event does not exist");
