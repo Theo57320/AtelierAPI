@@ -83,10 +83,10 @@ $app->options('/{routes:.+}', function ($request, $response, $args) {
     return $response;
 });
 
-$app->get('/auth',
+$app->get('/auth[/]',
     reuAuthController::class.":authenticate"
 );
-$app->get('/check',
+$app->get('/check[/]',
     reuAuthController::class.":checkValiditeToken"
 );
 

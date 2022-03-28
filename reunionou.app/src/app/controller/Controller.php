@@ -93,8 +93,8 @@ class Controller
         }
 
 
-        $user = User::Get()->where('mail', 'like', filter_var($user_data['mail'], FILTER_SANITIZE_EMAIL));
-        if (!empty($user[0])) {
+        $user = User::Where('mail', 'like', filter_var($user_data['mail'], FILTER_SANITIZE_EMAIL))->get();
+        if (!empty($user[0]['id'])) {
             return Writer::json_error($rs, 400, "mail already exists");
         }
 
@@ -131,8 +131,7 @@ class Controller
         $token = $req->getQueryParam('token', null);
         $user = User::where('token', '=', $token)
             ->get();
-            $resp = $resp->   
-        $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8')->withStatus(200);
+        $resp = $resp->$resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8')->withStatus(200);
         $resp->getBody()->write(json_encode($user));
         return $resp;
     }
@@ -303,13 +302,11 @@ class Controller
         if (v::stringType()->validate($id) != true) {
             return Writer::json_error($resp, 400, "incorrect format for: id");
         }
-        $event = Rdv::Get()
-            ->where('id', '=', $id);
-        $userToken = User::Get()
-            ->where('token', '=', $token);
+        $event = Rdv::Where('id', '=', $id)->get();
+        $userToken = User::Where('token', '=', $token)->get('id');
         if ($event[0]['createur_id'] == $userToken[0]['id']) {
             $res["type"] = "event";
-            $res["infos"] = $event[0];
+            $res["infos"] = $event;
             $tableParticiper = Participer::Get()
                 ->where('id_rdv', '=', $id)->where('statut', 'like', 'oui');
             $i = 0;
@@ -318,8 +315,6 @@ class Controller
                 $res["users"][$i] = $user[0];
                 $i++;
             }
-
-
             $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
             $resp->getBody()->write(json_encode($res));
             return $resp;
