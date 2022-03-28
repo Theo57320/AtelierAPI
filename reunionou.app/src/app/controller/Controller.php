@@ -512,4 +512,70 @@ class Controller
             return Writer::json_error($resp, 404, "This event does not exist");
         }
     }
+    public function getStats(Request $req, Response $resp, array $args): Response
+    {
+        $token = $req->getQueryParam('token', null);
+        $id = $args['id'];
+        if (v::stringType()->validate($id) != true) {
+            return Writer::json_error($resp, 400, "incorrect format for: id");
+        }
+        $user = User::Where('token', '=', $token)->get('id');
+        $participer = Participer::Where('id_rdv', '=', $id)->get();
+        if ($participer[0] !== null) {
+            $res=$participer[0]['statut'];
+            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp->getBody()->write(json_encode($res));
+            return $resp;
+        } else {
+            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp->getBody()->write(json_encode("rien"));
+            return $resp;
+        }
+    }
+    public function getStatut(Request $req, Response $resp, array $args): Response
+    {
+        $token = $req->getQueryParam('token', null);
+        $id = $args['id'];
+        if (v::stringType()->validate($id) != true) {
+            return Writer::json_error($resp, 400, "incorrect format for: id");
+        }
+        $user = User::Where('token', '=', $token)->get('id');
+        $participer = Participer::Where('id_rdv', '=', $id)->get();
+        if ($participer[0] !== null) {
+            $res=$participer[0]['statut'];
+            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp->getBody()->write(json_encode($res));
+            return $resp;
+        } else {
+            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp->getBody()->write(json_encode("rien"));
+            return $resp;
+        }
+    }
+    public function getRole(Request $req, Response $resp, array $args): Response
+    {
+        $token = $req->getQueryParam('token', null);
+        $id = $args['id'];
+        if (v::stringType()->validate($id) != true) {
+            return Writer::json_error($resp, 400, "incorrect format for: id");
+        }
+        $user = User::Where('token', '=', $token)->get('id');
+        $event = Rdv::Where('id', '=', $id)->get();
+        if ($event[0] !== null) {
+            if($event[0]['createur_id']== $user[0]['id']){
+                $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+                $resp->getBody()->write(json_encode(["role"=>"proprietaire"]));
+                return $resp;
+            }
+            else {
+                $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+                $resp->getBody()->write(json_encode(["role"=>"invite"]));
+                return $resp;
+            }
+        } else {
+            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp->getBody()->write(json_encode(["role"=>"invite"]));
+            return $resp;
+        }
+    }
 }
