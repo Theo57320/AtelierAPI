@@ -491,10 +491,16 @@ class Controller
         }
         $event = Rdv::where("id", "like", $id)->get();
         if (isset($event[0])) {
-            $comments = Commenter::where("id_rdv", 'like', $id)->get('message')->sortBy('created_at');
-
+            $comments = Commenter::where("id_rdv", 'like', $id)->get(['message','id_user','created_at'])->sortBy('created_at');
+            $i= 0;
+            foreach ($comments as $comment) {
+                $res[$i]['message'] = $comment['message'];
+                $user=User::where("id", '=', $comment['id_user'])->get(['nom','prenom']);
+                $res[$i]['user'] = $user;
+                $i++;
+            }
             $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
-            $resp->getBody()->write(json_encode($comments));
+            $resp->getBody()->write(json_encode($res));
             return $resp;
         } else {
             return Writer::json_error($resp, 404, "This event does not exist");
