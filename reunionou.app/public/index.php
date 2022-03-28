@@ -145,13 +145,19 @@ $app->post(
 )->add('checkToken');
 
 $app->post(
-    '/lastConnection[/]',
+    '/postEvent[/]',
     function (Request $req, Response $resp, $args): Response {
         $ctrl = new Controller($this);
         return $ctrl->PostEvent($req, $resp, $args);
     }
 )->add('checkToken');
-
+$app->post(
+    '/lastConnection[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->lastConnection($req, $resp, $args);
+    }
+)->add('checkToken');
 $app->get(
     '/myEvents[/]',
     function (Request $req, Response $resp, $args): Response {

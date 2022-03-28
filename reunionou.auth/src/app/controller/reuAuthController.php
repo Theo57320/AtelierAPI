@@ -73,14 +73,14 @@ class reuAuthController
                     'sexe' => $user->sexe,
                 ]
             ],
-            $secret,
+            '68V0zWFrS72GbpPreidkQFLfj4v9m3Ti+DXc8OB0gcM=',
             'HS512'
         );
 
         $user->token = bin2hex(random_bytes(32));
         $user->save();
         $data = [
-            'access-token' => $token,
+            'access_token' => $token,
             'token' => $user->token
         ];
 
@@ -91,7 +91,6 @@ class reuAuthController
     {
 
         if (!$rq->hasHeader('Authorization')) {
-
             $rs = $rs->withHeader('WWW-authenticate', 'Basic realm="commande_api api" ');
             return Writer::json_error($rs, 401, 'No Authorization header present');
         };
@@ -101,7 +100,7 @@ class reuAuthController
             $secret = $this->container->settings['secret'];
             $h = $rq->getHeader('Authorization')[0];
             $tokenstring = sscanf($h, "Bearer %s")[0];
-            $token = JWT::decode($tokenstring, new Key($secret, 'HS512'));
+            $token = JWT::decode($tokenstring, new Key('68V0zWFrS72GbpPreidkQFLfj4v9m3Ti+DXc8OB0gcM=', 'HS512'));
 
             $data =  [
                 'mail' => $token->upr->mail,
