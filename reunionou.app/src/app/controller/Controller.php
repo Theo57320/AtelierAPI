@@ -260,6 +260,11 @@ class Controller
             $r->createur_id = $createur_id[0]['id'];
             $r->save();
 
+            $i = new Inviter();
+            $i->id_rdv = $id;
+            $i->id_user = $createur_id[0]['id'];
+            $i->save();
+
             $p = new Participer();
             $p->id_rdv = $id;
             $p->id_user = $createur_id[0]['id'];
