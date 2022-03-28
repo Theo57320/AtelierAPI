@@ -265,6 +265,12 @@ class Controller
             $p->statut = 'oui';
             $p->save();
 
+            $c= new Commenter();
+            $c->id_rdv = $id;
+            $c->id_user = $createur_id[0]['id'];
+            $c->message = 'Je viens';
+            $c->save();
+
             $rs->getBody()->write(json_encode($r)); //erreur DEMANDER AU PROF
             return $rs;
         } catch (\Exception $e) {
@@ -496,7 +502,7 @@ class Controller
             foreach ($comments as $comment) {
                 $res[$i]['message'] = $comment['message'];
                 $user=User::where("id", '=', $comment['id_user'])->get(['nom','prenom']);
-                $res[$i]['user'] = $user;
+                $res[$i]['user'] = $user[0];
                 $i++;
             }
             $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
