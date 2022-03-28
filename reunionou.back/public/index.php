@@ -10,10 +10,17 @@ require_once  __DIR__ . '/../src/vendor/autoload.php';
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
 use reu\back\app\controller\Controller as Controller;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+
+use reu\back\app\middlewares\Token as Token;
+use reu\back\app\utils\Writer;
+
+use reu\back\app\models\User as User;
 
 $configuration = [
     'settings' => [
         'displayErrorDetails' => true, // Mettre à false pour déployer l'api en mode production
+        "determineRouteBeforeAppMiddleware" => true,
     ],
     'dbconf' => function ($c) {
         return parse_ini_file(__DIR__ . '/../src/app/conf/reu.db.conf.ini');
@@ -71,7 +78,34 @@ $db->addConnection($c->dbconf); /* configuration avec nos paramètres */
 $db->setAsGlobal(); /* rendre la connexion visible dans tout le projet */
 $db->bootEloquent();
 
-
+function checkToken(Request $rq, Response $rs, callable $next)
+{
+   
+    // récupérer l'identifiant de cmmde dans la route et le token
+    // $id = $rq->getAttribute('route')->getArgument( 'id');
+    $token = $rq->getQueryParam('token', null);
+    // vérifier que le token correspond à la commande
+    try {
+        User::where('token', '=', $token)
+            // ->where('id', '=', $id)
+            ->firstOrFail();
+    } catch (ModelNotFoundException $e) {
+        return Writer::json_error($rs, 400, "erreur param token inexistant ou invalide");
+        return $rs;
+    };
+    return $next($rq, $rs);
+}
+$app->add(function ($req, $res, $next) {
+    $response = $next($req, $res);
+    return $response
+            ->withHeader('Access-Control-Allow-Origin', $req->getHeader('Origin'))
+            ->withHeader('Access-Control-Allow-Methods', 'POST, PUT, OPTIONS, GET, DELETE')
+            ->withHeader('Access-Control-Allow-Credentials','true')
+            ->withHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Accept, Origin, Authorization, X-Custom-Header','XMLHttpRequest');
+});
+$app->options('/{routes:.+}', function ($request, $response, $args) {
+    return $response;
+});
 $app->get(
     '/users[/]',
     function (Request $req, Response $resp, $args): Response {
@@ -140,7 +174,9 @@ $app->delete(
 );
 
 
-
-
+$app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function($req, $res) {
+    $handler = $this->notFoundHandler; // handle using the default Slim page not found handler
+    return $handler($req, $res);
+});
 
 $app->run();
