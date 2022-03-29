@@ -207,6 +207,48 @@ $app->get(
         return $ctrl->ListComment($req, $resp, $args);
     }
 );
+$app->get(
+    '/getStatus/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->getStatut($req, $resp, $args);
+    }
+)->add('checkToken');
+$app->get(
+    '/getRole/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->getRole($req, $resp, $args);
+    }
+)->add('checkToken');
+$app->get(
+    '/InvitEvents[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->InvitEvents($req, $resp, $args);
+    }
+)->add('checkToken');
+$app->get(
+    '/getUser[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->getUser($req, $resp, $args);
+    }
+)->add('checkToken');
+$app->get(
+    '/getUsersInvite/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->getUsersInvite($req, $resp, $args);
+    }
+)->add('checkToken');
+$app->post(
+    '/invitation/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->invitation($req, $resp, $args);
+    }
+)->add('checkToken');
 
 $app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function($req, $res) {
     $handler = $this->notFoundHandler; // handle using the default Slim page not found handler
