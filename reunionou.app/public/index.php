@@ -242,7 +242,7 @@ $app->get(
         return $ctrl->getUsersInvite($req, $resp, $args);
     }
 )->add('checkToken');
-$app->get(
+$app->post(
     '/invitation/{id}[/]',
     function (Request $req, Response $resp, $args): Response {
         $ctrl = new Controller($this);
