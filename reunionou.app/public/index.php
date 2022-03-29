@@ -242,6 +242,13 @@ $app->get(
         return $ctrl->getUsersInvite($req, $resp, $args);
     }
 )->add('checkToken');
+$app->get(
+    '/getUsersNonInvite/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->getUsersNonInvite($req, $resp, $args);
+    }
+)->add('checkToken');
 $app->post(
     '/invitation/{id}[/]',
     function (Request $req, Response $resp, $args): Response {

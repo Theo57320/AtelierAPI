@@ -603,6 +603,43 @@ class Controller
         $resp->getBody()->write(json_encode($res));
         return $resp;
     }
+    public function getUsersNonInvite(Request $req, Response $resp, array $args): Response
+    {
+        $id = $args['id'];
+        if (v::stringType()->validate($id) != true) {
+            return Writer::json_error($resp, 400, "incorrect format for: id");
+        }
+        $allUsers = User::get('id');
+        $allUsers = json_decode($allUsers);
+        $inviters = Inviter::where("id_rdv", "like", $id)->get('id_user');
+        $inviters = json_decode(json_encode($inviters));
+        $i=0;
+        foreach ($inviters as $inv){
+            foreach($inv as $val){
+                $tableIDInviter[$i]=json_decode(json_encode($val));
+            }
+            $i++; 
+        }
+        $a=0;
+        foreach ($allUsers as $user){
+            foreach($user as $val){
+                $tableIDUsers[$a]=json_decode(json_encode($val));
+            }
+            $a++; 
+        }
+        $TableIDnonInvite = array_diff($tableIDUsers,$tableIDInviter);
+        $n=0;
+        foreach ($TableIDnonInvite as $b){
+            $usr=User::Where('id','=',$b)->get(['nom','prenom','id','mail']);
+            $result["users"][$n] = $usr[0];
+            $n++;
+        }
+        // var_dump($tableIDInviter);
+        // var_dump($tableIDUsers);
+        $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+        $resp->getBody()->write(json_encode($result));
+        return $resp;
+    }
     public function invitation(Request $req, Response $resp, array $args): Response{
         $id = $args['id'];
         $id_user= $req->getQueryParam('id_user', null);

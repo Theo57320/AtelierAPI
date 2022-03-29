@@ -41,7 +41,7 @@ class Controller
     //USER
     public function allUsers(Request $req, Response $resp, array $args): Response
     {
-        $commandes = user_admin::all();
+        $commandes = User::all();
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($commandes));
         return $resp;
@@ -51,7 +51,7 @@ class Controller
     public function getUser(Request $req, Response $resp, array $args): Response
     {
         $id=$args['id'];
-        $user = user_admin::select(['id','nom','prenom','mail','sexe'])
+        $user = User::select(['id','nom','prenom','mail','sexe'])
         ->where('id','=',$id)
         ->FirstorFail();
 
@@ -85,7 +85,7 @@ class Controller
         $Ajd = date("y-m-d");
         $dateDiff= date_outil($Ajd,152);
         
-        $commandes = user_admin::select(['id','nom','prenom','mail','sexe','dateConnexion'])
+        $commandes = User::select(['id','nom','prenom','mail','sexe','dateConnexion'])
         ->where('dateConnexion','<',$dateDiff)
         ->get();
         // var_dump($commandes);
@@ -137,7 +137,7 @@ class Controller
     public function suppUser(Request $req, Response $resp, array $args): Response
     {
         $id=$args['id'];
-        $user = user_admin::where('id','=',$id)
+        $user = User::where('id','=',$id)
         ->delete();  
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($user));
