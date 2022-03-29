@@ -247,6 +247,14 @@ $app->post(
     function (Request $req, Response $resp, $args): Response {
         $ctrl = new Controller($this);
         return $ctrl->invitation($req, $resp, $args);
+    },
+   
+)->add('checkToken');
+$app->delete(
+    '/userSupp[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->suppUser($req, $resp, $args);
     }
 )->add('checkToken');
 
