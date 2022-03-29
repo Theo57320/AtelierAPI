@@ -308,6 +308,27 @@ class Controller
     }
 
 
+    public function eventbyId(Request $req, Response $resp, array $args): Response
+    {
+        $id = $args['id'];
+        if (v::stringType()->validate($id) != true) {
+            return Writer::json_error($resp, 400, "incorrect format for: id");
+        }
+        $event = Rdv::Where('id', '=', $id)->get();
+        $res["type"] = "event";
+        $res["infos"] = $event;
+        $tableParticiper = Participer::Get()
+            ->where('id_rdv', '=', $id)->where('statut', 'like', 'oui');
+        $i = 0;
+        foreach ($tableParticiper as $value) {
+            $user = User::Where('id', 'like', $value["id_user"])->get(['nom', 'prenom']);
+            $res["users"][$i] = $user[0];
+            $i++;
+        }
+        $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+        $resp->getBody()->write(json_encode($res));
+        return $resp;
+    }
     public function myEventbyId(Request $req, Response $resp, array $args): Response
     {
         $token = $req->getQueryParam('token', null);
@@ -772,5 +793,23 @@ class Controller
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($user));
         return $resp;
+    }
+    public function suppEvent(Request $req, Response $resp, array $args): Response
+    {
+        $token = $req->getQueryParam('token', null);
+        $id = $args['id'];
+        if (v::stringType()->validate($id) != true) {
+            return Writer::json_error($resp, 400, "incorrect format for: id");
+        }
+        $event = Rdv::Where('id', '=', $id)->get();
+        $userToken = User::Where('token', '=', $token)->get('id');
+        if ($event[0]['createur_id'] == $userToken[0]['id']) {
+            $event = Rdv::Where('id', '=', $id)->delete();
+            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp->getBody()->write(json_encode("event supprimé"));
+            return $resp;
+        } else {
+            return Writer::json_error($resp, 404, "you are not the creator of this event'");
+        }
     }
 }

@@ -173,6 +173,13 @@ $app->get(
     }
 )->add('checkToken');
 $app->get(
+    '/event/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->eventbyId($req, $resp, $args);
+    }
+);
+$app->get(
     '/AllMyEvents[/]',
     function (Request $req, Response $resp, $args): Response {
         $ctrl = new Controller($this);
@@ -276,6 +283,13 @@ $app->delete(
     function (Request $req, Response $resp, $args): Response {
         $ctrl = new Controller($this);
         return $ctrl->suppUser($req, $resp, $args);
+    }
+)->add('checkToken');
+$app->delete(
+    '/RdvSupp/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->suppEvent($req, $resp, $args);
     }
 )->add('checkToken');
 
