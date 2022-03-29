@@ -647,4 +647,13 @@ class Controller
         $resp->getBody()->write(json_encode($user));
         return $resp;
     }
+    public function suppUser(Request $req, Response $resp, array $args): Response
+    {
+        $token = $req->getQueryParam('token', null);
+        $user = User::where('token', '=', $token)
+        ->delete();
+        $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+        $resp->getBody()->write(json_encode($user));
+        return $resp;
+    }
 }
