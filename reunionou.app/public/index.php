@@ -208,6 +208,13 @@ $app->get(
     }
 );
 $app->get(
+    '/NeparticipePas/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->NeparticipePas($req, $resp, $args);
+    }
+);
+$app->get(
     '/getStatus/{id}[/]',
     function (Request $req, Response $resp, $args): Response {
         $ctrl = new Controller($this);
