@@ -643,18 +643,35 @@ class Controller
             }
             $i++;
         }
+        if (empty($tableIDInviter)) {
+            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp->getBody()->write(json_encode("rien"));
+            return $resp;
+        }
         $pasParticiper = Participer::Where('id_rdv', '=', $id)
             ->where('statut', 'like', 'non')
             ->get('id_user');
         $pasParticiper = json_decode(json_encode($pasParticiper));
         $c = 0;
+
         foreach ($pasParticiper as $value) {
             foreach ($value as $id) {
                 $table[$c] = json_decode(json_encode($id));
             }
             $c++;
         }
-        // var_dump($tableIDInviter);
+        if (empty($pasParticiper)) {
+            $n = 0;
+            foreach ($tableIDInviter as $b) {
+                $usr = User::Where('id', '=', $b)->get(['nom', 'prenom', 'id', 'mail']);
+                $result["users"][$n] = $usr[0];
+                $n++;
+            }
+            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp->getBody()->write(json_encode($result));
+            return $resp;
+        }
+
         $TableIDnonAccepte = array_diff($tableIDInviter, $table);
         $n = 0;
         foreach ($TableIDnonAccepte as $b) {
@@ -690,28 +707,14 @@ class Controller
             }
             $a++;
         }
-
-        $pasParticiper = Participer::Where('id_rdv', '=', $id)
-            ->where('statut', 'like', 'non')
-            ->get('id_user');
-        $pasParticiper = json_decode(json_encode($pasParticiper));
-        $c = 0;
-        foreach ($pasParticiper as $value) {
-            foreach ($value as $id) {
-                $table[$c] = json_decode(json_encode($id));
-            }
-            $c++;
-        }
         $TableIDnonInvite = array_diff($tableIDUsers, $tableIDInviter);
-        $TableIDnonInvite = array_diff($TableIDnonInvite, $table);
         $n = 0;
         foreach ($TableIDnonInvite as $b) {
             $usr = User::Where('id', '=', $b)->get(['nom', 'prenom', 'id', 'mail']);
             $result["users"][$n] = $usr[0];
             $n++;
         }
-        // var_dump($tableIDInviter);
-        // var_dump($tableIDUsers);
+
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($result));
         return $resp;
