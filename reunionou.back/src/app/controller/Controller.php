@@ -17,6 +17,7 @@ use reu\back\app\models\Rdv;
 use reu\back\app\models\Participer;
 use reu\back\app\models\Commenter;
 use reu\back\app\models\User_admin;
+use reu\back\app\models\Inviter;
 
 use  Illuminate\Support\Str;
 use Respect\Validation\Validator as v;
@@ -123,9 +124,8 @@ class Controller
     public function rdvPasse(Request $req, Response $resp, array $args): Response
     {
         // SELECT col FROM une_table WHERE col_date <= CURDATE()
-
-        $rdv = Rdv::Where('date', '<=', 'CURDATE()')
-            ->get();
+        $rdv = Rdv::Get()->where('date', '<=', 'CURDATE()');
+            
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($rdv));
         return $resp;
@@ -136,9 +136,20 @@ class Controller
     //SUPP
     public function suppUser(Request $req, Response $resp, array $args): Response
     {
-        $id = $args['id'];
-        $user = User::where('id', '=', $id)
-            ->delete();
+        $id=$args['id'];
+        $user = User::where('id','=',$id)
+        ->delete();
+        $commenter= Commenter::where('id_user','=',$id)->delete();
+        $participer= Participer::where('id_user','=',$id)->delete();
+        $inviter=Inviter::where('id_user','=',$id)->delete();
+
+        $rdv=Rdv::where('createur_id','=',$id)->get();
+        foreach ($rdv as $r) {
+            $commenter= Commenter::where('id_rdv','=',$r['id'])->delete();
+            $participer= Participer::where('id_rdv','=',$r['id'])->delete();
+            $inviter=Inviter::where('id_rdv','=',$r['id'])->delete();
+            $suppr_rdv=Rdv::where('id','=',$r['id'])->delete();
+        }
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($user));
         return $resp;

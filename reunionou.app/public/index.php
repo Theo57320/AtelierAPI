@@ -292,6 +292,13 @@ $app->delete(
         return $ctrl->suppEvent($req, $resp, $args);
     }
 )->add('checkToken');
+$app->get(
+    '/ListInvitsSansRep/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->listInvitsSansReponse($req, $resp, $args);
+    }
+)->add('checkToken');
 
 $app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function($req, $res) {
     $handler = $this->notFoundHandler; // handle using the default Slim page not found handler

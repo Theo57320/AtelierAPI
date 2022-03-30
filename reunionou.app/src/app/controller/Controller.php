@@ -777,6 +777,25 @@ class Controller
         $resp->getBody()->write(json_encode($res));
         return $resp;
     }
+    public function listInvitsSansReponse(Request $req, Response $resp, array $args): Response
+    {
+        $token = $req->getQueryParam('token', null);
+        $user = User::where('token', '=', $token)->get();
+        $res["type"] = "event";
+        $tableInviter = Inviter::where('id_user', '=', $user[0]['id'])->get();
+        $i = 0;
+        foreach ($tableInviter as $value) {
+            $rdv = RDV::Where('id', 'like', $value["id_rdv"])->get(['id', 'lat', 'long', 'libelle_event', 'libelle_lieu', 'horaire', 'date', 'createur_id']);
+            if($rdv[0]['createur_id'] != $user[0]['id']) {
+                $res["events"][$i] = $rdv[0];
+                $i++;
+            }
+            
+        }
+        $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+        $resp->getBody()->write(json_encode($res));
+        return $resp;
+    }
     public function getUser(Request $req, Response $resp, array $args): Response
     {
         $id = $req->getQueryParam('id', null);
