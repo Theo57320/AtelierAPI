@@ -95,6 +95,17 @@ class Controller
         $resp->getBody()->write(json_encode($commandes));
         return $resp;
     }
+   
+
+    // public function userAbsent(Request $req, Response $resp, array $args): Response
+    // {
+    //     $commandes = User::select(['id','nom','prenom','mail','sexe','dateConnexion'])
+    //     ->where('datediff(day, dateConnexion, getdate()','>','10')
+    //     ->get();
+    //     $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+    //     $resp->getBody()->write(json_encode($commandes));
+    //     return $resp;
+    // }
 
 
     //RDV
