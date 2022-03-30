@@ -109,7 +109,7 @@ class Controller
     public function getRdv(Request $req, Response $resp, array $args): Response
     {
         $id=$args['id'];
-        $rdv = Rdv::select(['id','lat','long','libelle_event','libelle_lieu','horraire','date','createur_id'])
+        $rdv = Rdv::select(['id','lat','long','libelle_event','libelle_lieu','horaire','date','createur_id'])
         ->where('id','=',$id)
         ->FirstorFail();
 
@@ -123,7 +123,7 @@ class Controller
     {
         // SELECT col FROM une_table WHERE col_date <= CURDATE()
 
-        $rdv = Rdv::select(['id','lat','long','libelle_event','libelle_lieu','horraire','date','createur_id'])
+        $rdv = Rdv::select(['id','lat','long','libelle_event','libelle_lieu','horaire','date','createur_id'])
         ->where('date','<=', 'CURDATE()')
         ->get();
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
