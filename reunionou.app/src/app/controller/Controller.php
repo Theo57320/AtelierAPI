@@ -832,7 +832,7 @@ class Controller
             $resp->getBody()->write(json_encode("event supprimé"));
             return $resp;
         } else {
-            return Writer::json_error($resp, 404, "you are not the creator of this event'");
+            return Writer::json_error($resp, 401, "you are not the creator of this event");
         }
     }
 }
