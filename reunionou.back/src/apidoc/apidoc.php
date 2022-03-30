@@ -141,7 +141,7 @@
   /**
  * @api {get} /rdv/ Request all rdv
  * @apiName rdv
- * @apiGroup rdv
+ * @apiGroup Event
  *
 
  *
