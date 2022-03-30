@@ -182,8 +182,9 @@ class Controller
             if (v::stringType()->validate($password) != true) {
                 return Writer::json_error($resp, 400, "incorrect value for: password");
             } else {
+                $pass = password_hash(filter_var($password, FILTER_SANITIZE_STRING), PASSWORD_BCRYPT, ["cost" => 10]);
                 User::where('token', '=', $token)
-                    ->update(['password' => password_hash(filter_var($password, FILTER_SANITIZE_STRING), PASSWORD_BCRYPT, ["cost" => 10])]);
+                    ->update(['password' => $pass]);
             }
         }
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
@@ -386,27 +387,22 @@ class Controller
     public function AllmyEvents(Request $req, Response $resp, array $args): Response
     {
         $token = $req->getQueryParam('token', null);
-
-        $user = User::Get()
-            ->where('token', '=', $token);
-        $res["type"] = "event";
-        $tableParticiper = Participer::Get()
-            ->where('id_user', '=', $user[0]['id']);
-        $i = 0;
-        foreach ($tableParticiper as $value) {
-            $rdv = RDV::Where('id', 'like', $value["id_rdv"])->get(['lat', 'long', 'libelle_event', 'libelle_lieu', 'horaire', 'date', 'createur_id']);
-            $res["events"][$i] = $rdv[0];
-            $tableParticipants = Participer::Get()
-                ->where('id_rdv', '=', $value["id_rdv"])->where('statut', 'like', 'oui');
-            $a = 0;
-            foreach ($tableParticipants as $p) {
-                $participant = User::Where('id', 'like', $p["id_user"])->get(['nom', 'prenom']);
-                $part[$a] = $participant[0];
-                $a++;
-            };
-            $i++;
+        $user = User::Where('token', '=', $token)->first();
+        $res["type"] = "collection";
+        $tableParticiper = Participer::Where('id_user', '=', $user['id'])->where('statut', '=', 'oui')->get();
+        if (empty($tableParticiper[0])) {
+            return Writer::json_error($resp, 404, $user['id']);
+        } else {
+            $i = 0;
+            foreach ($tableParticiper as $value) {
+                $rdv = RDV::Where('id', 'like', $value["id_rdv"])->get(['id', 'libelle_event', 'libelle_lieu', 'horaire', 'date', 'createur_id']);
+                $res["events"][$i] = $rdv[0];
+                $usr = User::where('id', '=', $rdv[0]['createur_id'])->get(['nom', 'prenom']);
+                $res["events"][$i]["creator"] = $usr[0];
+                $i++;
+            }
         }
-        $res["events"][$i]['participants'] = $part;
+
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($res));
         return $resp;
@@ -577,10 +573,10 @@ class Controller
         $participer = Participer::Where('id_rdv', '=', $id)->where('id_user', '=', $user[0]['id'])->get();
         if ($participer[0] !== null) {
             // $res = $participer[0]['statut'];
-            if($participer[0]['statut']=='oui'){
+            if ($participer[0]['statut'] == 'oui') {
                 $res = 'oui';
             }
-            if($participer[0]['statut']=='non'){
+            if ($participer[0]['statut'] == 'non') {
                 $res = 'non';
             }
             $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
@@ -792,8 +788,8 @@ class Controller
         $i = 0;
         foreach ($tableInviter as $value) {
             $rdv = RDV::Where('id', 'like', $value["id_rdv"])->get(['id', 'lat', 'long', 'libelle_event', 'libelle_lieu', 'horaire', 'date', 'createur_id']);
-            $reponse = Participer::Where('id_rdv','like',$value["id_rdv"])->where('id_user','like',$user[0]['id'])->get();
-            if($rdv[0]['createur_id'] != $user[0]['id'] && empty($reponse[0])) {
+            $reponse = Participer::Where('id_rdv', 'like', $value["id_rdv"])->where('id_user', 'like', $user[0]['id'])->get();
+            if ($rdv[0]['createur_id'] != $user[0]['id'] && empty($reponse[0])) {
                 $res["events"][$i] = $rdv[0];
                 $usr = User::where('id', '=', $rdv[0]['createur_id'])->get(['nom', 'prenom']);
                 $res["events"][$i]["creator"] = $usr[0];
