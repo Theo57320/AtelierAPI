@@ -25,27 +25,6 @@ services:
     depends_on:
       - mysql.reunionou
 
-
-
-  #Mobile
-  api.reunion.mobile:
-    image: 'canals/php:latest'
-    environment:
-      - VHOST_HOSTNAME=api.reunionou.mobile
-      - VHOST_DOCROOT=/var/www/public
-    ports:
-      - '19280:80'
-      - '19200:820'
-    volumes:
-      - './reunionou.mobile/public:/var/www/public'
-      - './reunionou.mobile/src:/var/www/src'
-    working_dir: /var/www/src
-    networks:
-      - reunionou.net
-    depends_on:
-      - mysql.reunionou
-
-  
   #backoffice
 
   api.reunion.back:
