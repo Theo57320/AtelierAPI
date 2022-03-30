@@ -61,7 +61,7 @@ $configuration = [
                 [
                     "type" => "error",
                     "error" => "400",
-                    "message" => "URI mal formee",
+                    "message" => "URI mal formulee",
                 ]
             ));
             return $resp;
@@ -225,7 +225,7 @@ $app->get(
     '/getStatus/{id}[/]',
     function (Request $req, Response $resp, $args): Response {
         $ctrl = new Controller($this);
-        return $ctrl->getStatut($req, $resp, $args);
+        return $ctrl->getStats($req, $resp, $args);
     }
 )->add('checkToken');
 $app->get(
@@ -293,7 +293,7 @@ $app->delete(
     }
 )->add('checkToken');
 $app->get(
-    '/ListInvitsSansRep/{id}[/]',
+    '/ListInvitsSansRep[/]',
     function (Request $req, Response $resp, $args): Response {
         $ctrl = new Controller($this);
         return $ctrl->listInvitsSansReponse($req, $resp, $args);

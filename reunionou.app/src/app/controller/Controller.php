@@ -574,9 +574,15 @@ class Controller
             return Writer::json_error($resp, 400, "incorrect format for: id");
         }
         $user = User::Where('token', '=', $token)->get('id');
-        $participer = Participer::Where('id_rdv', '=', $id)->get();
+        $participer = Participer::Where('id_rdv', '=', $id)->where('id_user', '=', $user[0]['id'])->get();
         if ($participer[0] !== null) {
-            $res = $participer[0]['statut'];
+            // $res = $participer[0]['statut'];
+            if($participer[0]['statut']=='oui'){
+                $res = 'oui';
+            }
+            if($participer[0]['statut']=='non'){
+                $res = 'non';
+            }
             $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
             $resp->getBody()->write(json_encode($res));
             return $resp;
@@ -586,26 +592,26 @@ class Controller
             return $resp;
         }
     }
-    public function getStatut(Request $req, Response $resp, array $args): Response
-    {
-        $token = $req->getQueryParam('token', null);
-        $id = $args['id'];
-        if (v::stringType()->validate($id) != true) {
-            return Writer::json_error($resp, 400, "incorrect format for: id");
-        }
-        $user = User::Where('token', '=', $token)->get('id');
-        $participer = Participer::Where('id_rdv', '=', $id)->get();
-        if ($participer[0] !== null) {
-            $res = $participer[0]['statut'];
-            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
-            $resp->getBody()->write(json_encode($res));
-            return $resp;
-        } else {
-            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
-            $resp->getBody()->write(json_encode("rien"));
-            return $resp;
-        }
-    }
+    // public function getStatut(Request $req, Response $resp, array $args): Response
+    // {
+    //     $token = $req->getQueryParam('token', null);
+    //     $id = $args['id'];
+    //     if (v::stringType()->validate($id) != true) {
+    //         return Writer::json_error($resp, 400, "incorrect format for: id");
+    //     }
+    //     $user = User::Where('token', '=', $token)->get('id');
+    //     $participer = Participer::Where('id_rdv', '=', $id)->get();
+    //     if ($participer[0] !== null) {
+    //         $res = $participer[0]['statut'];
+    //         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+    //         $resp->getBody()->write(json_encode($res));
+    //         return $resp;
+    //     } else {
+    //         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+    //         $resp->getBody()->write(json_encode("rien"));
+    //         return $resp;
+    //     }
+    // }
     public function getRole(Request $req, Response $resp, array $args): Response
     {
         $token = $req->getQueryParam('token', null);
@@ -781,16 +787,18 @@ class Controller
     {
         $token = $req->getQueryParam('token', null);
         $user = User::where('token', '=', $token)->get();
-        $res["type"] = "event";
+        $res["type"] = "collection";
         $tableInviter = Inviter::where('id_user', '=', $user[0]['id'])->get();
         $i = 0;
         foreach ($tableInviter as $value) {
             $rdv = RDV::Where('id', 'like', $value["id_rdv"])->get(['id', 'lat', 'long', 'libelle_event', 'libelle_lieu', 'horaire', 'date', 'createur_id']);
-            if($rdv[0]['createur_id'] != $user[0]['id']) {
+            $reponse = Participer::Where('id_rdv','like',$value["id_rdv"])->where('id_user','like',$user[0]['id'])->get();
+            if($rdv[0]['createur_id'] != $user[0]['id'] && empty($reponse[0])) {
                 $res["events"][$i] = $rdv[0];
+                $usr = User::where('id', '=', $rdv[0]['createur_id'])->get(['nom', 'prenom']);
+                $res["events"][$i]["creator"] = $usr[0];
                 $i++;
             }
-            
         }
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($res));

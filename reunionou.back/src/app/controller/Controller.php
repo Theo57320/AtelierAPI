@@ -157,9 +157,15 @@ class Controller
 
     public function suppRdv(Request $req, Response $resp, array $args): Response
     {
-        $id = $args['id'];
-        $rdv = Rdv::where('id', '=', $id)
-            ->delete();
+        $id=$args['id'];
+        $rdv = Rdv::where('id','=',$id)
+        ->get();
+        foreach ($rdv as $r) {
+            $commenter= Commenter::where('id_rdv','=',$r['id'])->delete();
+            $participer= Participer::where('id_rdv','=',$r['id'])->delete();
+            $inviter=Inviter::where('id_rdv','=',$r['id'])->delete();
+            $suppr_rdv=Rdv::where('id','=',$r['id'])->delete();
+        }
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($rdv));
         return $resp;
