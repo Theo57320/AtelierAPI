@@ -7,7 +7,7 @@ namespace reu\back\app\controller;
 use Firebase\JWT\JWT as JWT;
 use Firebase\JWT\Key as Key;
 use Firebase\JWT\ExpiredException;
-use Firebase\JWT\SignatureInvalidException ;
+use Firebase\JWT\SignatureInvalidException;
 use Firebase\JWT\BeforeValidException;
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -33,9 +33,10 @@ use \Psr\Http\Message\ResponseInterface as Response;
 class Controller
 {
     private $c; //le conteneur de dépendance de l'application
-    
-    public function __construct(\Slim\Container $c){
-        $this->container=$c;
+
+    public function __construct(\Slim\Container $c)
+    {
+        $this->container = $c;
     }
 
     //USER
@@ -50,44 +51,44 @@ class Controller
 
     public function getUser(Request $req, Response $resp, array $args): Response
     {
-        $id=$args['id'];
-        $user = User::select(['id','nom','prenom','mail','sexe'])
-        ->where('id','=',$id)
-        ->FirstorFail();
+        $id = $args['id'];
+        $user = User::select(['id', 'nom', 'prenom', 'mail', 'sexe'])
+            ->where('id', '=', $id)
+            ->FirstorFail();
 
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($user));
         return $resp;
     }
 
-//UserABSENT    
+    //UserABSENT    
     public function userAbsent(Request $req, Response $resp, array $args): Response
     {
 
-        function date_outil($date,$nombre_jour) {
- 
-            $year = substr($date, 0, -6);   
-            $month = substr($date, -5, -3);   
-            $day = substr($date, -2);   
-         
+        function date_outil($date, $nombre_jour)
+        {
+
+            $year = substr($date, 0, -6);
+            $month = substr($date, -5, -3);
+            $day = substr($date, -2);
+
             // récupère la date du jour
-            $date_string = mktime(0,0,0,$month,$day,$year);
-         
+            $date_string = mktime(0, 0, 0, $month, $day, $year);
+
             // Supprime les jours
             $timestamp = $date_string - ($nombre_jour * 86400);
-            $nouvelle_date = date("Y-m-d", $timestamp); 
-         
+            $nouvelle_date = date("Y-m-d", $timestamp);
+
             // pour afficher
-           return $nouvelle_date;
-         
-            }
+            return $nouvelle_date;
+        }
 
         $Ajd = date("y-m-d");
-        $dateDiff= date_outil($Ajd,152);
-        
-        $commandes = User::select(['id','nom','prenom','mail','sexe','dateConnexion'])
-        ->where('dateConnexion','<',$dateDiff)
-        ->get();
+        $dateDiff = date_outil($Ajd, 152);
+
+        $commandes = User::select(['id', 'nom', 'prenom', 'mail', 'sexe', 'dateConnexion'])
+            ->where('dateConnexion', '<', $dateDiff)
+            ->get();
         // var_dump($commandes);
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($commandes));
@@ -104,14 +105,14 @@ class Controller
         return $resp;
     }
 
-    
+
 
     public function getRdv(Request $req, Response $resp, array $args): Response
     {
-        $id=$args['id'];
-        $rdv = Rdv::select(['id','lat','long','libelle_event','libelle_lieu','horaire','date','createur_id'])
-        ->where('id','=',$id)
-        ->FirstorFail();
+        $id = $args['id'];
+        $rdv = Rdv::select(['id', 'lat', 'long', 'libelle_event', 'libelle_lieu', 'horaire', 'date', 'createur_id'])
+            ->where('id', '=', $id)
+            ->FirstorFail();
 
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($rdv));
@@ -123,9 +124,8 @@ class Controller
     {
         // SELECT col FROM une_table WHERE col_date <= CURDATE()
 
-        $rdv = Rdv::select(['id','lat','long','libelle_event','libelle_lieu','horaire','date','createur_id'])
-        ->where('date','<=', 'CURDATE()')
-        ->get();
+        $rdv = Rdv::Where('date', '<=', 'CURDATE()')
+            ->get();
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($rdv));
         return $resp;
@@ -136,9 +136,9 @@ class Controller
     //SUPP
     public function suppUser(Request $req, Response $resp, array $args): Response
     {
-        $id=$args['id'];
-        $user = User::where('id','=',$id)
-        ->delete();  
+        $id = $args['id'];
+        $user = User::where('id', '=', $id)
+            ->delete();
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($user));
         return $resp;
@@ -146,9 +146,9 @@ class Controller
 
     public function suppRdv(Request $req, Response $resp, array $args): Response
     {
-        $id=$args['id'];
-        $rdv = Rdv::where('id','=',$id)
-        ->delete();
+        $id = $args['id'];
+        $rdv = Rdv::where('id', '=', $id)
+            ->delete();
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($rdv));
         return $resp;
@@ -158,7 +158,7 @@ class Controller
 
     public function authenticate(Request $rq, Response $rs, $args): Response
     {
-        
+
         if (!$rq->hasHeader('Authorization')) {
             $rs = $rs->withHeader('WWW-authenticate', 'Basic realm="reu_api api" ');
             return Writer::json_error($rs, 401, 'No Authorization header present');
@@ -196,7 +196,7 @@ class Controller
                 'upr' => [
                     'mail' => $user->email,
                     'token' => $user->token,
-                
+
                 ]
             ],
             '68V0zWFrS72GbpPreidkQFLfj4v9m3Ti+DXc8OB0gcM=',
@@ -250,15 +250,15 @@ class Controller
     {
         $user_data = $rq->getParsedBody();
 
-        
+
         if (!isset($user_data['email']) || !filter_var($user_data['email'], FILTER_SANITIZE_EMAIL)) {
             return Writer::json_error($rs, 400, "missing data : mail");
         }
-        
+
         if (!isset($user_data['password'])) {
             return Writer::json_error($rs, 400, "missing data : password");
         }
-        
+
 
         $user = user_admin::Where('email', 'like', filter_var($user_data['email'], FILTER_SANITIZE_EMAIL))->get();
         if (!empty($user[0]['id'])) {
@@ -285,5 +285,4 @@ class Controller
             return $rs;
         }
     }
-
 }
