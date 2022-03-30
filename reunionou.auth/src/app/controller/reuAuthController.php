@@ -115,7 +115,7 @@ class reuAuthController
         } catch (BeforeValidException $e) {
             return Writer::json_error($rs, 401, 'BeforeValidException. error message:' . $e->getMessage()); // Comment on teste cette erreur
         } catch (\UnexpectedValueException $e) {
-            return Writer::json_error($rs, 401, 'Valuer unexpected. error message:' . $e->getMessage());
+            return Writer::json_error($rs, 401, 'Value unexpected. error message:' . $e->getMessage());
         };
         return Writer::json_output($rs, 200, $data);
     }

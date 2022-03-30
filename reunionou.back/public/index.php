@@ -16,6 +16,7 @@ use reu\back\app\middlewares\Token as Token;
 use reu\back\app\utils\Writer;
 
 use reu\back\app\models\User as User;
+use reu\back\app\models\User_admin as User_admin;
 
 $configuration = [
     'settings' => [
@@ -127,6 +128,29 @@ $app->get(
     function (Request $req, Response $resp, $args): Response {
         $ctrl = new Controller($this);
         return $ctrl->userAbsent($req, $resp, $args);
+    }
+);
+
+// Back
+$app->get(
+    '/auth[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->authenticate($req, $resp, $args);
+    }
+);
+$app->get(
+    '/check[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->checkValiditeToken($req, $resp, $args);
+    }
+);
+$app->post(
+    '/register[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->register($req, $resp, $args);
     }
 );
 

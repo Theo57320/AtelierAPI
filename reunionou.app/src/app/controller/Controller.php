@@ -182,8 +182,9 @@ class Controller
             if (v::stringType()->validate($password) != true) {
                 return Writer::json_error($resp, 400, "incorrect value for: password");
             } else {
+                $pass = password_hash(filter_var($password, FILTER_SANITIZE_STRING), PASSWORD_BCRYPT, ["cost" => 10]);
                 User::where('token', '=', $token)
-                    ->update(['password' => password_hash(filter_var($password, FILTER_SANITIZE_STRING), PASSWORD_BCRYPT, ["cost" => 10])]);
+                    ->update(['password' => $pass]);
             }
         }
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
@@ -271,7 +272,7 @@ class Controller
             $p->statut = 'oui';
             $p->save();
 
-            $c= new Commenter();
+            $c = new Commenter();
             $c->id_rdv = $id;
             $c->id_user = $createur_id[0]['id'];
             $c->message = 'Je viens';
@@ -307,6 +308,28 @@ class Controller
         }
     }
 
+
+    public function eventbyId(Request $req, Response $resp, array $args): Response
+    {
+        $id = $args['id'];
+        if (v::stringType()->validate($id) != true) {
+            return Writer::json_error($resp, 400, "incorrect format for: id");
+        }
+        $event = Rdv::Where('id', '=', $id)->get();
+        $res["type"] = "event";
+        $res["infos"] = $event;
+        $tableParticiper = Participer::Get()
+            ->where('id_rdv', '=', $id)->where('statut', 'like', 'oui');
+        $i = 0;
+        foreach ($tableParticiper as $value) {
+            $user = User::Where('id', 'like', $value["id_user"])->get(['nom', 'prenom']);
+            $res["users"][$i] = $user[0];
+            $i++;
+        }
+        $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+        $resp->getBody()->write(json_encode($res));
+        return $resp;
+    }
     public function myEventbyId(Request $req, Response $resp, array $args): Response
     {
         $token = $req->getQueryParam('token', null);
@@ -334,31 +357,52 @@ class Controller
             return Writer::json_error($resp, 404, "you are not the creator of this event'");
         }
     }
+    public function NeparticipePas(Request $req, Response $resp, array $args): Response
+    {
+        $token = $req->getQueryParam('token', null);
+        $id = $args['id'];
+        if (v::stringType()->validate($id) != true) {
+            return Writer::json_error($resp, 400, "incorrect format for: id");
+        }
+        $event = Rdv::Where('id', '=', $id)->get();
+        $userToken = User::Where('token', '=', $token)->get('id');
+        if ($event[0]['createur_id'] == $userToken[0]['id']) {
+            $res["type"] = "users";
+            $tableParticiper = Participer::Get()
+                ->where('id_rdv', '=', $id)->where('statut', 'like', 'non');
+            $i = 0;
+            foreach ($tableParticiper as $value) {
+                $user = User::Where('id', 'like', $value["id_user"])->get(['nom', 'prenom']);
+                $res["users"][$i] = $user[0];
+                $i++;
+            }
+            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp->getBody()->write(json_encode($res));
+            return $resp;
+        } else {
+            return Writer::json_error($resp, 404, "you are not the creator of this event'");
+        }
+    }
 
     public function AllmyEvents(Request $req, Response $resp, array $args): Response
     {
         $token = $req->getQueryParam('token', null);
-
-        $user = User::Get()
-            ->where('token', '=', $token);
-        $res["type"] = "event";
-        $tableParticiper = Participer::Get()
-            ->where('id_user', '=', $user[0]['id']);
-        $i = 0;
-        foreach ($tableParticiper as $value) {
-            $rdv = RDV::Where('id', 'like', $value["id_rdv"])->get(['lat', 'long', 'libelle_event', 'libelle_lieu', 'horaire', 'date', 'createur_id']);
-            $res["events"][$i] = $rdv[0];
-            $tableParticipants = Participer::Get()
-                ->where('id_rdv', '=', $value["id_rdv"])->where('statut', 'like', 'oui');
-            $a = 0;
-            foreach ($tableParticipants as $p) {
-                $participant = User::Where('id', 'like', $p["id_user"])->get(['nom', 'prenom']);
-                $part[$a] = $participant[0];
-                $a++;
-            };
-            $i++;
+        $user = User::Where('token', '=', $token)->first();
+        $res["type"] = "collection";
+        $tableParticiper = Participer::Where('id_user', '=', $user['id'])->where('statut', '=', 'oui')->get();
+        if (empty($tableParticiper[0])) {
+            return Writer::json_error($resp, 404, $user['id']);
+        } else {
+            $i = 0;
+            foreach ($tableParticiper as $value) {
+                $rdv = RDV::Where('id', 'like', $value["id_rdv"])->get(['id', 'libelle_event', 'libelle_lieu', 'horaire', 'date', 'createur_id']);
+                $res["events"][$i] = $rdv[0];
+                $usr = User::where('id', '=', $rdv[0]['createur_id'])->get(['nom', 'prenom']);
+                $res["events"][$i]["creator"] = $usr[0];
+                $i++;
+            }
         }
-        $res["events"][$i]['participants'] = $part;
+
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($res));
         return $resp;
@@ -503,11 +547,11 @@ class Controller
         }
         $event = Rdv::where("id", "like", $id)->get();
         if (isset($event[0])) {
-            $comments = Commenter::where("id_rdv", 'like', $id)->get(['message','id_user','created_at'])->sortBy('created_at');
-            $i= 0;
+            $comments = Commenter::where("id_rdv", 'like', $id)->get(['message', 'id_user', 'created_at'])->sortBy('created_at');
+            $i = 0;
             foreach ($comments as $comment) {
                 $res[$i]['message'] = $comment['message'];
-                $user=User::where("id", '=', $comment['id_user'])->get(['nom','prenom']);
+                $user = User::where("id", '=', $comment['id_user'])->get(['nom', 'prenom']);
                 $res[$i]['user'] = $user[0];
                 $i++;
             }
@@ -526,9 +570,15 @@ class Controller
             return Writer::json_error($resp, 400, "incorrect format for: id");
         }
         $user = User::Where('token', '=', $token)->get('id');
-        $participer = Participer::Where('id_rdv', '=', $id)->get();
+        $participer = Participer::Where('id_rdv', '=', $id)->where('id_user', '=', $user[0]['id'])->get();
         if ($participer[0] !== null) {
-            $res=$participer[0]['statut'];
+            // $res = $participer[0]['statut'];
+            if ($participer[0]['statut'] == 'oui') {
+                $res = 'oui';
+            }
+            if ($participer[0]['statut'] == 'non') {
+                $res = 'non';
+            }
             $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
             $resp->getBody()->write(json_encode($res));
             return $resp;
@@ -538,26 +588,26 @@ class Controller
             return $resp;
         }
     }
-    public function getStatut(Request $req, Response $resp, array $args): Response
-    {
-        $token = $req->getQueryParam('token', null);
-        $id = $args['id'];
-        if (v::stringType()->validate($id) != true) {
-            return Writer::json_error($resp, 400, "incorrect format for: id");
-        }
-        $user = User::Where('token', '=', $token)->get('id');
-        $participer = Participer::Where('id_rdv', '=', $id)->get();
-        if ($participer[0] !== null) {
-            $res=$participer[0]['statut'];
-            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
-            $resp->getBody()->write(json_encode($res));
-            return $resp;
-        } else {
-            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
-            $resp->getBody()->write(json_encode("rien"));
-            return $resp;
-        }
-    }
+    // public function getStatut(Request $req, Response $resp, array $args): Response
+    // {
+    //     $token = $req->getQueryParam('token', null);
+    //     $id = $args['id'];
+    //     if (v::stringType()->validate($id) != true) {
+    //         return Writer::json_error($resp, 400, "incorrect format for: id");
+    //     }
+    //     $user = User::Where('token', '=', $token)->get('id');
+    //     $participer = Participer::Where('id_rdv', '=', $id)->get();
+    //     if ($participer[0] !== null) {
+    //         $res = $participer[0]['statut'];
+    //         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+    //         $resp->getBody()->write(json_encode($res));
+    //         return $resp;
+    //     } else {
+    //         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+    //         $resp->getBody()->write(json_encode("rien"));
+    //         return $resp;
+    //     }
+    // }
     public function getRole(Request $req, Response $resp, array $args): Response
     {
         $token = $req->getQueryParam('token', null);
@@ -568,19 +618,18 @@ class Controller
         $user = User::Where('token', '=', $token)->get('id');
         $event = Rdv::Where('id', '=', $id)->get();
         if ($event[0] !== null) {
-            if($event[0]['createur_id']== $user[0]['id']){
+            if ($event[0]['createur_id'] == $user[0]['id']) {
                 $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
-                $resp->getBody()->write(json_encode(["role"=>"proprietaire"]));
+                $resp->getBody()->write(json_encode(["role" => "proprietaire"]));
                 return $resp;
-            }
-            else {
+            } else {
                 $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
-                $resp->getBody()->write(json_encode(["role"=>"invite"]));
+                $resp->getBody()->write(json_encode(["role" => "invite"]));
                 return $resp;
             }
         } else {
             $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
-            $resp->getBody()->write(json_encode(["role"=>"invite"]));
+            $resp->getBody()->write(json_encode(["role" => "invite"]));
             return $resp;
         }
     }
@@ -597,17 +646,108 @@ class Controller
             $inviters = User::where("id", "like", $inv['id_user'])->get();
             $res["users"][$i] = $inviters[0];
             $i++;
-
         }
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($res));
         return $resp;
     }
-    public function invitation(Request $req, Response $resp, array $args): Response{
+    public function getUsersInviteNonRefuse(Request $req, Response $resp, array $args): Response
+    {
         $id = $args['id'];
-        $id_user= $req->getQueryParam('id_user', null);
+        if (v::stringType()->validate($id) != true) {
+            return Writer::json_error($resp, 400, "incorrect format for: id");
+        }
+        $inviters = Inviter::where("id_rdv", "like", $id)->get('id_user');
+        $inviters = json_decode(json_encode($inviters));
+        $i = 0;
+        foreach ($inviters as $inv) {
+            foreach ($inv as $val) {
+                $tableIDInviter[$i] = json_decode(json_encode($val));
+            }
+            $i++;
+        }
+        if (empty($tableIDInviter)) {
+            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp->getBody()->write(json_encode("rien"));
+            return $resp;
+        }
+        $pasParticiper = Participer::Where('id_rdv', '=', $id)
+            ->where('statut', 'like', 'non')
+            ->get('id_user');
+        $pasParticiper = json_decode(json_encode($pasParticiper));
+        $c = 0;
 
-        if($id_user==null){
+        foreach ($pasParticiper as $value) {
+            foreach ($value as $id) {
+                $table[$c] = json_decode(json_encode($id));
+            }
+            $c++;
+        }
+        if (empty($pasParticiper)) {
+            $n = 0;
+            foreach ($tableIDInviter as $b) {
+                $usr = User::Where('id', '=', $b)->get(['nom', 'prenom', 'id', 'mail']);
+                $result["users"][$n] = $usr[0];
+                $n++;
+            }
+            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp->getBody()->write(json_encode($result));
+            return $resp;
+        }
+
+        $TableIDnonAccepte = array_diff($tableIDInviter, $table);
+        $n = 0;
+        foreach ($TableIDnonAccepte as $b) {
+            $usr = User::Where('id', '=', $b)->get(['nom', 'prenom', 'id', 'mail']);
+            $result["users"][$n] = $usr[0];
+            $n++;
+        }
+        $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+        $resp->getBody()->write(json_encode($result));
+        return $resp;
+    }
+    public function getUsersNonInvite(Request $req, Response $resp, array $args): Response
+    {
+        $id = $args['id'];
+        if (v::stringType()->validate($id) != true) {
+            return Writer::json_error($resp, 400, "incorrect format for: id");
+        }
+        $allUsers = User::get('id');
+        $allUsers = json_decode($allUsers);
+        $inviters = Inviter::where("id_rdv", "like", $id)->get('id_user');
+        $inviters = json_decode(json_encode($inviters));
+        $i = 0;
+        foreach ($inviters as $inv) {
+            foreach ($inv as $val) {
+                $tableIDInviter[$i] = json_decode(json_encode($val));
+            }
+            $i++;
+        }
+        $a = 0;
+        foreach ($allUsers as $user) {
+            foreach ($user as $val) {
+                $tableIDUsers[$a] = json_decode(json_encode($val));
+            }
+            $a++;
+        }
+        $TableIDnonInvite = array_diff($tableIDUsers, $tableIDInviter);
+        $n = 0;
+        foreach ($TableIDnonInvite as $b) {
+            $usr = User::Where('id', '=', $b)->get(['nom', 'prenom', 'id', 'mail']);
+            $result["users"][$n] = $usr[0];
+            $n++;
+        }
+
+        $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+        $resp->getBody()->write(json_encode($result));
+        return $resp;
+    }
+    public function invitation(Request $req, Response $resp, array $args): Response
+    {
+        $id = $args['id'];
+        $id_user = $req->getQueryParam('id_user', null);
+
+        if ($id_user == null) {
             return Writer::json_error($resp, 400, "id_user invalid or not here");
         }
         $p = new Inviter();
@@ -617,11 +757,11 @@ class Controller
 
 
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
-            $resp->getBody()->write(json_encode([
-                "type" => "Response",
-                "message" => "User invite",
-            ]));
-            return $resp;
+        $resp->getBody()->write(json_encode([
+            "type" => "Response",
+            "message" => "User invite",
+        ]));
+        return $resp;
     }
     public function InvitEvents(Request $req, Response $resp, array $args): Response
     {
@@ -631,9 +771,30 @@ class Controller
         $tableInviter = Inviter::where('id_user', '=', $user[0]['id'])->get();
         $i = 0;
         foreach ($tableInviter as $value) {
-            $rdv = RDV::Where('id', 'like', $value["id_rdv"])->get(['id','lat', 'long', 'libelle_event', 'libelle_lieu', 'horaire', 'date', 'createur_id']);
+            $rdv = RDV::Where('id', 'like', $value["id_rdv"])->get(['id', 'lat', 'long', 'libelle_event', 'libelle_lieu', 'horaire', 'date', 'createur_id']);
             $res["events"][$i] = $rdv[0];
             $i++;
+        }
+        $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+        $resp->getBody()->write(json_encode($res));
+        return $resp;
+    }
+    public function listInvitsSansReponse(Request $req, Response $resp, array $args): Response
+    {
+        $token = $req->getQueryParam('token', null);
+        $user = User::where('token', '=', $token)->get();
+        $res["type"] = "collection";
+        $tableInviter = Inviter::where('id_user', '=', $user[0]['id'])->get();
+        $i = 0;
+        foreach ($tableInviter as $value) {
+            $rdv = RDV::Where('id', 'like', $value["id_rdv"])->get(['id', 'lat', 'long', 'libelle_event', 'libelle_lieu', 'horaire', 'date', 'createur_id']);
+            $reponse = Participer::Where('id_rdv', 'like', $value["id_rdv"])->where('id_user', 'like', $user[0]['id'])->get();
+            if ($rdv[0]['createur_id'] != $user[0]['id'] && empty($reponse[0])) {
+                $res["events"][$i] = $rdv[0];
+                $usr = User::where('id', '=', $rdv[0]['createur_id'])->get(['nom', 'prenom']);
+                $res["events"][$i]["creator"] = $usr[0];
+                $i++;
+            }
         }
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($res));
@@ -642,7 +803,7 @@ class Controller
     public function getUser(Request $req, Response $resp, array $args): Response
     {
         $id = $req->getQueryParam('id', null);
-        $user = User::where('id','=',$id)->first();
+        $user = User::where('id', '=', $id)->first();
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($user));
         return $resp;
@@ -651,9 +812,27 @@ class Controller
     {
         $token = $req->getQueryParam('token', null);
         $user = User::where('token', '=', $token)
-        ->delete();
+            ->delete();
         $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
         $resp->getBody()->write(json_encode($user));
         return $resp;
+    }
+    public function suppEvent(Request $req, Response $resp, array $args): Response
+    {
+        $token = $req->getQueryParam('token', null);
+        $id = $args['id'];
+        if (v::stringType()->validate($id) != true) {
+            return Writer::json_error($resp, 400, "incorrect format for: id");
+        }
+        $event = Rdv::Where('id', '=', $id)->get();
+        $userToken = User::Where('token', '=', $token)->get('id');
+        if ($event[0]['createur_id'] == $userToken[0]['id']) {
+            $event = Rdv::Where('id', '=', $id)->delete();
+            $resp = $resp->withHeader('Content-Type', 'application/json;charset=utf-8');
+            $resp->getBody()->write(json_encode("event supprimé"));
+            return $resp;
+        } else {
+            return Writer::json_error($resp, 401, "you are not the creator of this event");
+        }
     }
 }

@@ -61,7 +61,7 @@ $configuration = [
                 [
                     "type" => "error",
                     "error" => "400",
-                    "message" => "URI mal formee",
+                    "message" => "URI mal formulee",
                 ]
             ));
             return $resp;
@@ -173,6 +173,13 @@ $app->get(
     }
 )->add('checkToken');
 $app->get(
+    '/event/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->eventbyId($req, $resp, $args);
+    }
+);
+$app->get(
     '/AllMyEvents[/]',
     function (Request $req, Response $resp, $args): Response {
         $ctrl = new Controller($this);
@@ -208,10 +215,17 @@ $app->get(
     }
 );
 $app->get(
+    '/NeparticipePas/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->NeparticipePas($req, $resp, $args);
+    }
+);
+$app->get(
     '/getStatus/{id}[/]',
     function (Request $req, Response $resp, $args): Response {
         $ctrl = new Controller($this);
-        return $ctrl->getStatut($req, $resp, $args);
+        return $ctrl->getStats($req, $resp, $args);
     }
 )->add('checkToken');
 $app->get(
@@ -242,6 +256,20 @@ $app->get(
         return $ctrl->getUsersInvite($req, $resp, $args);
     }
 )->add('checkToken');
+$app->get(
+    '/getUsersNonInvite/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->getUsersNonInvite($req, $resp, $args);
+    }
+)->add('checkToken');
+$app->get(
+    '/getUsersInviteNonRefuse/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->getUsersInviteNonRefuse($req, $resp, $args);
+    }
+)->add('checkToken');
 $app->post(
     '/invitation/{id}[/]',
     function (Request $req, Response $resp, $args): Response {
@@ -255,6 +283,20 @@ $app->delete(
     function (Request $req, Response $resp, $args): Response {
         $ctrl = new Controller($this);
         return $ctrl->suppUser($req, $resp, $args);
+    }
+)->add('checkToken');
+$app->delete(
+    '/RdvSupp/{id}[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->suppEvent($req, $resp, $args);
+    }
+)->add('checkToken');
+$app->get(
+    '/ListInvitsSansRep[/]',
+    function (Request $req, Response $resp, $args): Response {
+        $ctrl = new Controller($this);
+        return $ctrl->listInvitsSansReponse($req, $resp, $args);
     }
 )->add('checkToken');
 
